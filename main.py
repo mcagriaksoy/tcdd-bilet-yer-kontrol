@@ -77,7 +77,7 @@ def mainLoop():
         driverGet(driver)
         rota(driver,nereden,nereye,tarih)
         control(driver,saat)
-        sleep(10)
+        sleep(30)
     
 
 

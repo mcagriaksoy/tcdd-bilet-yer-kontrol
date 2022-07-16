@@ -10,4 +10,4 @@ class DriverGet:
     def driverGet(self):
         self.driver.get(self.url)
         WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#biletAramaForm > div:nth-child(3) > p:nth-child(4)")))
-
+        print("Sayfa yüklendi")

@@ -25,7 +25,7 @@ class PushSafer():
             "v" : 3,
             "i" : 9,
             "d" : 'a',
-            "k" : "EbNquIM3VCj80rfoBL1K"
+            "k" : "key"
             }
         request = Request(url, urlencode(post_fields).encode())
         json = urlopen(request).read().decode()

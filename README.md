@@ -3,6 +3,14 @@
 ### Paket Kurulumu 
 `$ pip install -r requirements.txt`
 
+### PushSafer Kurulumu 
+`main.py -> PushSafer().sendNotification()` fonksiyonunun key kısmına https://www.pushsafer.com 'dan üye olup aldığınız private key'inizi giriniz
+
+![chrome_oGIz4AlFYP](https://user-images.githubusercontent.com/56798318/179354186-a0115ad5-f725-4ff9-8d9a-e0793369acea.png)
+
+
+
+
 - Chrome driver indirme https://chromedriver.storage.googleapis.com/index.html
 
 Uygulama TCDD sitesine özel tasarlanmıştır.

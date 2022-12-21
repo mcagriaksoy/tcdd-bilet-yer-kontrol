@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Birol Emekli
+@author: Birol Emekli, https://github.com/bymcs, Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 from selenium import webdriver
 from time import sleep
@@ -9,10 +9,8 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import PySimpleGUI as sg
 from threading import Thread
-
+from datetime import date
 import Control, Rota, DriverSetting , DriverGet
-
-
 
 class PushSafer():
     def sendNotification(self, baslik, mesaj):
@@ -51,51 +49,45 @@ def control(driver,timee):
         driver.quit()
         sys.exit()
 
-
-font = ('Arial', 10)
-sg.theme('DarkBlue')
+font = ('Verdana', 10)
+sg.theme('SystemDefault1')
+today = date.today()
+currentDate = today.strftime("%d.%m.%Y")
 
 layout = [  
-            [[sg.Column([[sg.Text('TCDD')]], justification='center')]],
-            [sg.Text('Nereden :',size=(7,1)), sg.Combo(['Gebze','Bilecik YHT'],default_value='Gebze',key='nereden')],
-            [sg.Text('Nereye :',size=(7,1)), sg.Combo(['Gebze','Bilecik YHT'],default_value='Bilecik YHT',key='nereye')],
-            [sg.Text('Tarih :',size=(7,1)), sg.InputText(['18.07.2022'],size=(14,5),key='tarih')],
+            [[sg.Column([[sg.Text('TCDD Bilet Arama Botu')]], justification='center')]],
+            [sg.Text('Nereden :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar'],default_value='İstanbul(Söğütlü Ç.)',key='nereden')],
+            [sg.Text('Nereye :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar'],default_value='Ankara Gar',key='nereye')],
+            [sg.Text('Tarih :',size=(7,1)), sg.InputText(currentDate,size=(14,5),key='tarih')],
             [sg.Text('Saat :',size=(7,1)), sg.InputText(['09:11'],size=(14,5),key='saat')],
-            [sg.Button('Ara'), sg.Button('Durdur'),sg.Button('Kapat')]
+            [sg.Button('Aramaya Başla'), sg.Button('Durdur!'),sg.Button('Kapat!')],
+            [sg.Text('Mesaj :',size=(6,1)), sg.Multiline("",size=(22,8),key='log',autoscroll=True, reroute_stdout=True,)]
          ]
 
-
-window = sg.Window('Python App',layout,size = (250, 250),resizable = False,font=font)
-
+window = sg.Window('TCDD Bilet Arama Botu',layout,size = (300, 250),resizable = False,font=font, element_justification='l')
 
 
 def mainLoop():
 
-    while True:
-        
+    while True:   
         driver = driverSetting()
         driverGet(driver)
         rota(driver,nereden,nereye,tarih)
         control(driver,saat)
         sleep(30)
-    
-
 
 while True:
-
     event, values = window.read()
-    
+
     if event == sg.WIN_CLOSED or event == 'Kapat':
-        
         window.close()
         sys.exit()
 
-    if event == 'Ara':
-        
+    if event == 'Aramaya Başla':
         nereden = values['nereden']
         nereye  = values['nereye']
-        tarih = '18.07.2022'
-        saat = '09:11'
-        
+        tarih = values['tarih']
+        saat = values['saat']
         th = Thread(target=mainLoop).start()
+            
 

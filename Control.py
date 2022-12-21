@@ -9,14 +9,11 @@ from selenium.common.exceptions import NoSuchElementException,TimeoutException,U
 from time import sleep
 import sys
 
-
-
 class Control:
     def __init__(self,driver,time):
         self.driver=driver
         self.zaman=time
 
-    
     def sayfaKontrol(self):  
 
         try:
@@ -35,11 +32,10 @@ class Control:
                                 if int(message[22]) > 2:
                                     
                                     print("Boş koltuk sayısı: "+ message[22])
-                                    print("Fazla bilet bulundu , Bildirim gönderiliyor.")
+                                    print("HARİKA! Fazla bilet bulundu.. Satın Alabilirsin")
                                     return "successful"
                                 else:
-                                    print("Boş koltuk sayısı: "+ message[22])
-                                    print("istenen boş koltuk sayısı : 3")
+                                    print("Boş koltuk sayısı: "+ message[22] +" Sadece Engelli Bileti Kaldı!")
                                     print("Arama tekrar deneniyor...")
                                     message = ""
                                     self.driver.quit()

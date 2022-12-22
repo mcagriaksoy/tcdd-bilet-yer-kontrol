@@ -19,19 +19,18 @@ class Control:
         try:
             element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu_data")))
             if element != "":
+                print("Aranan  saat : " + self.zaman)
                 for row in range(1, 15):
                     try:
                          aranan = self.driver.find_element(By.XPATH ,'/html/body/div[3]/div[2]/div/div/div/div/form/div[1]/div/div[1]/div/div/div/div[1]/div/div/div/table/tbody/tr[{0}]/td[1]/span'.format(row)).text 
-                         print("bulunan saat : " + aranan + " | aranan  saat : " + self.zaman)
-                         sleep(0.5)
+                         sleep(0.3)
                          if self.zaman == aranan:
                             sleep(0.5)
                             message=self.driver.find_element(By.XPATH ,'//*[@id="mainTabView:gidisSeferTablosu:{0}:j_idt109:0:somVagonTipiGidis1_label"]'.format(row - 1)).text
                             if message[22] != '0':
                                 
                                 if int(message[22]) > 2:
-                                    
-                                    print("Boş koltuk sayısı: "+ message[22])
+                                    print("Boş koltuk sayısı: "+ message[22] + message[23])
                                     print("HARİKA! Fazla bilet bulundu.. Satın Alabilirsin")
                                     return "successful"
                                 else:
@@ -42,7 +41,7 @@ class Control:
                                     return
                                 
                             else:
-                                print("Aradığınız seferde boş yer yok...")
+                                print("Aradığınız seferde hiç boş yer yok...")
                                 self.driver.quit()
                                 message = ""
                                 return
@@ -55,7 +54,7 @@ class Control:
                 print("Aradığınız seferde boş yer yoktur...")
 
         except (TimeoutException,NoSuchElementException) as ex:
-            print ("TCDD sitesi yüklemede bir hata meydana geldi... Tekrar deneniyor...")
+            print ("Tekrar deneniyor...")
             self.driver.close()
             return
         except UnexpectedAlertPresentException as ex1:

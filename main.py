@@ -44,7 +44,7 @@ def control(driver,timee):
     response = Control.Control(driver,timee).sayfaKontrol()
     
     if response == "successful":
-        
+        sg.Popup('Heyy Orada mısın? Biletin bulundu. Satın alabilirsin', keep_on_top=True)
         pushSafer.sendNotification('TCDD Bilet Kontrol', "2'den fazla bilet bulundu")
         driver.quit()
         sys.exit()
@@ -55,17 +55,18 @@ today = date.today()
 currentDate = today.strftime("%d.%m.%Y")
 
 layout = [  
-            [[sg.Column([[sg.Text('TCDD Bilet Arama Botu')]], justification='center')]],
-            [sg.Text('Nereden :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar'],default_value='İstanbul(Söğütlü Ç.)',key='nereden')],
-            [sg.Text('Nereye :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar'],default_value='Ankara Gar',key='nereye')],
+            [[sg.Column([[sg.Text('github.com/mcagriaksoy')]], justification='center')]],
+            [sg.Text('Nereden :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)','İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar', 'Konya'],default_value='İstanbul(Söğütlü Ç.)',key='nereden')],
+            [sg.Text('Nereye :',size=(7,1)), sg.Combo(['İstanbul(Söğütlü Ç.)', 'İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)', 'Gebze','Bilecik YHT','Eskişehir', 'Ankara Gar', 'Konya'],default_value='Ankara Gar',key='nereye')],
             [sg.Text('Tarih :',size=(7,1)), sg.InputText(currentDate,size=(14,5),key='tarih')],
             [sg.Text('Saat :',size=(7,1)), sg.InputText(['09:11'],size=(14,5),key='saat')],
+            [sg.Text('Arama Sıklığını seçiniz: (dakikada bir)')],
+            [sg.Slider(range=(1, 10), key='delayTime', orientation='h', size=(35, 25), default_value=1, enable_events=True)],
             [sg.Button('Aramaya Başla'), sg.Button('Durdur!'),sg.Button('Kapat!')],
-            [sg.Text('Mesaj :',size=(6,1)), sg.Multiline("",size=(22,8),key='log',autoscroll=True, reroute_stdout=True,)]
+            [sg.Multiline("",size=(32,8),key='log',autoscroll=True, reroute_stdout=True)]
          ]
 
-window = sg.Window('TCDD Bilet Arama Botu',layout,size = (300, 250),resizable = False,font=font, element_justification='l')
-
+window = sg.Window('TCDD Bilet Arama Botu',layout,size = (300, 350),resizable = False,font=font, element_justification='l')
 
 def mainLoop():
 
@@ -74,7 +75,7 @@ def mainLoop():
         driverGet(driver)
         rota(driver,nereden,nereye,tarih)
         control(driver,saat)
-        sleep(30)
+        sleep(delayTime)
 
 while True:
     event, values = window.read()
@@ -88,6 +89,7 @@ while True:
         nereye  = values['nereye']
         tarih = values['tarih']
         saat = values['saat']
+        delayTime = values['delayTime']
         th = Thread(target=mainLoop).start()
             
 

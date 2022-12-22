@@ -16,8 +16,9 @@ v2
 
 
 - Ocak 2023 Güncellemeler
-- .exe sürümü yayımlanacak
+- .exe sürümü yayımlanacak - DONE!
 - logo eklenecek.
+- hatalar giderilecek.
 - Bildirim sistemi güncellenecek, sms ya da e posta eklenecek.
 - tcdd chapta koruması tespiti yapılacak.
 
@@ -27,7 +28,9 @@ v2
 
 - Uygulama TCDD sitesine özel tasarlanmıştır.
 
-- Uygulama 30 saniye aralıklarla sorgu yapmaktadır `main.py -> mainLoop()`fonksiyonu yerinden istediğiniz gibi ayarlayabilirsiniz.
+- Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır 
+
+`main.py -> mainLoop()`fonksiyonu yerinden istediğiniz gibi ayarlayabilirsiniz.
 
 ### Paket Kurulumu 
 `$ pip install -r requirements.txt`
@@ -40,5 +43,5 @@ $ pyinstaller --onefile --noconsole main.py
 
 ### Kullanımı
 ```sh
-$ py main.py
+$ python main.py
 ```

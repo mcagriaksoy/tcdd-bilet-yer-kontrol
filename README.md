@@ -14,8 +14,6 @@ v2
 - Yeni durak isimleri eklendi.
 - Mekanizmalar yeniden düzenlendi.
 
-Ekran görüntüsü:
-![python_k81455g7zP](https://user-images.githubusercontent.com/56798318/179353750-31305c49-e25e-4e58-ad02-2429b2680ad6.png)
 
 - Ocak 2023 Güncellemeler
 - .exe sürümü yayımlanacak

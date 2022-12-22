@@ -1,6 +1,15 @@
 # Mehmet Çağrı Aksoy UPDATE!
 
 - Aralık 2022
+v2.1
+- Slider eklendi.
+- Bilet bulunca ortaya çıkan popup eklendi!
+- Bulunan kişi sayısındaki hata giderildi.
+
+SS:
+![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/ss2.png)
+
+v2
 - GUI Düzenlendi, loglama mekanizması eklendi, stdout loglara yazdırıldı.
 - Yeni durak isimleri eklendi.
 - Mekanizmalar yeniden düzenlendi.

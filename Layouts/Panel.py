@@ -115,8 +115,6 @@ class Panel(UserControl):
         #     )
         # )
 
-        self.sayfa.add(list2df(bilet_json))
-
         tren_sayisi  = len(bilet_json)
         bilet_sayisi = sum(
             sum(int(sayi) for sayi in findall(r"-([0-9]*)-", tren["Vagon Tipi"]))
@@ -128,4 +126,6 @@ class Panel(UserControl):
             icerik = f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu. ~ {self.tarih.value}"
         )
         self.__bilgi_metni(f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu..", renk=colors.GREEN_700)
+
+        self.sayfa.add(list2df(bilet_json))
         self.update()

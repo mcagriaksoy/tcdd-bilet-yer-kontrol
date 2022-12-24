@@ -3,7 +3,7 @@
 ![Repo Boyutu](https://img.shields.io/github/repo-size/keyiflerolsun/tcdd-bilet-kontrol)
 ![Görüntülenme](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/keyiflerolsun/tcdd-bilet-kontrol&title=Görüntülenme)
 <a href="https://KekikAkademi.org/Kahve" target="_blank"><img src="https://img.shields.io/badge/☕️-Kahve Ismarla-ffdd00" title="☕️ Kahve Ismarla" style="padding-left:5px;"></a>
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/cqi9h90mf4vxtkb0?svg=true)](https://ci.appveyor.com/project/keyiflerolsun/tcdd-bilet-kontrol)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/9efxqhy30a2xwu3g?svg=true)](https://ci.appveyor.com/project/keyiflerolsun/tcdd-bilet-kontrol)
 
 *TCDD Bilet Kontrol Etme Arayüzü*
 

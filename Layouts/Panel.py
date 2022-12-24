@@ -2,7 +2,7 @@
 
 from CLI           import konsol
 from flet.page     import Page, ControlEvent
-from flet          import UserControl, Container, Column, Row, Text, Dropdown, TextField, FloatingActionButton, icons, ProgressRing, Markdown, MarkdownExtensionSet, colors
+from flet          import UserControl, Container, Column, Row, ResponsiveRow, Text, Dropdown, TextField, FloatingActionButton, icons, ProgressRing, Markdown, MarkdownExtensionSet, colors
 from flet.dropdown import Option as DropdownOption
 from Libs          import TCDD, bildirim
 
@@ -41,7 +41,7 @@ class Panel(UserControl):
                 [
                     Row([self.baslik], alignment="center"),
                     Row([], alignment="center", height=25),
-                    Row([self.nerden, self.nereye], alignment="center"),
+                    ResponsiveRow([self.nerden, self.nereye], alignment="center"),
                     Row([self.tarih], alignment="center"),
                     Row([self.ara_buton], alignment="center"),
                     Row([self.araniyor], alignment="center"),
@@ -109,7 +109,8 @@ class Panel(UserControl):
             Markdown(
                 value         = tabulate(bilet_json, headers="keys", tablefmt="github"),
                 selectable    = True,
-                extension_set = MarkdownExtensionSet.GITHUB_WEB
+                extension_set = MarkdownExtensionSet.GITHUB_WEB,
+                code_theme    = "dracula"
             )
         )
 

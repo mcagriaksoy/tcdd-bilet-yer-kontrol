@@ -8,16 +8,16 @@ from json   import loads
 class TCDD:
     def __init__(self):
         self.tcdd_sorgu_sayfa = "https://ebilet.tcddtasimacilik.gov.tr/view/eybis/tnmGenel/tcddWebContent.jsf"
-        self.duraklar = [
-            "İstanbul(Söğütlü Ç.)",
+        self.duraklar         = [
+            "Ankara Gar",
+            "Bilecik YHT",
+            "Eskişehir",
+            "Gebze",
             "İstanbul(Bakırköy)",
             "İstanbul(Halkalı)",
             "İstanbul(Pendik)",
-            "Gebze",
-            "Bilecik YHT",
-            "Eskişehir",
-            "Ankara Gar",
-            "Konya",
+            "İstanbul(Söğütlü Ç.)",
+            "Konya"
         ]
 
         self.selsik   = SelSik(self.tcdd_sorgu_sayfa, pencere="gizli")
@@ -41,11 +41,11 @@ class TCDD:
         _sorgula_buton = self.selsik.eleman_bekle("//button[@id='btnSeferSorgula']")
         self.tarayici.execute_script("arguments[0].click();", _sorgula_buton)
 
-        self.selsik.eleman_bekle("//tbody[@id='mainTabView:gidisSeferTablosu_data']")
-        sefer_tablo = self.selsik.kaynak_kod("//div[@id='mainTabView:gidisSeferTablosu']//table").get()
-
-        if not sefer_tablo:
+        __tablo = self.selsik.eleman_bekle("//tbody[@id='mainTabView:gidisSeferTablosu_data']", saniye=3)
+        if not __tablo:
             return None
+
+        sefer_tablo = self.selsik.kaynak_kod("//div[@id='mainTabView:gidisSeferTablosu']//table").get()
 
         panda_veri  = read_html(str(sefer_tablo))[0].rename(
             columns = {
@@ -53,5 +53,12 @@ class TCDD:
                 "Seçim"      : "sil",
             }
         ).drop(columns="sil").dropna().reset_index(drop=True)
+
+        panda_veri["Tren Adı"] = panda_veri["Tren Adı"].str.replace("i  ", "")
+        panda_veri["Tren Adı"] = panda_veri["Tren Adı"].str.replace("StandartEsnek", "")
+
+        # re.sub(re.compile(r"\(([0-9]*)\)"), r"- \1 \\", vagon_tipi)
+        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.replace(r"\(([0-9]*)\)", r"-\1- , ", regex=True)
+        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.rstrip(", ")
 
         return loads(panda_veri.to_json(orient="records"))

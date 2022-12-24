@@ -6,3 +6,4 @@ SelSik
 flet
 pandas
 tabulate
+notify-py

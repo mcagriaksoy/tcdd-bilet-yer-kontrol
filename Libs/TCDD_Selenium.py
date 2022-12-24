@@ -16,5 +16,5 @@ class TCDD:
             "Konya",
         ]
 
-        self.selsik   = SelSik("https://ebilet.tcddtasimacilik.gov.tr/view/eybis/tnmGenel/tcddWebContent.jsf")
+        self.selsik   = SelSik("https://ebilet.tcddtasimacilik.gov.tr/view/eybis/tnmGenel/tcddWebContent.jsf", pencere="gizli")
         self.tarayici = self.selsik.tarayici

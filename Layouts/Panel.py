@@ -1,9 +1,10 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from flet.page import Page
-from flet      import UserControl, Container, Column, Row, Text, Dropdown
+from CLI           import konsol
+from flet.page     import Page, ControlEvent
+from flet          import UserControl, Container, Column, Row, Text, Dropdown, FloatingActionButton, icons
 from flet.dropdown import Option as DropdownOption
-from Libs      import TCDD
+from Libs          import TCDD
 
 class Panel(UserControl):
     def __init__(self, sayfa:Page):
@@ -20,9 +21,11 @@ class Panel(UserControl):
         self.sayfa.on_window_event      = kapanirken
         self.sayfa.update()
 
-        self.baslik = Text("TCDD Bilet Arama Botu", size=25, weight="bold", color="#EF7F1A")
-        self.nerden = Dropdown(label="Nereden?", hint_text="Nereden?", options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
-        self.nereye = Dropdown(label="Nereye?",  hint_text="Nereye?",  options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
+        self.baslik      = Text("TCDD Bilet Arama Botu", size=25, weight="bold", color="#EF7F1A")
+        self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
+        self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
+        self.ara_buton   = FloatingActionButton(text="Bilet Ara", icon=icons.SEARCH, on_click=self.bilet_ara)
+        self.cikti_alani = Column(auto_scroll=True)
 
     def build(self):
         return Container(
@@ -30,7 +33,14 @@ class Panel(UserControl):
                 [
                     Row([self.baslik], alignment="center"),
                     Row([], alignment="center", height=25),
-                    Row([self.nerden, self.nereye], alignment="center")
+                    Row([self.nerden, self.nereye], alignment="center"),
+                    Row([self.ara_buton], alignment="center"),
+                    Row([], alignment="center", height=25),
+                    Row([self.cikti_alani], alignment="center", height=25)
                 ]
             )
         )
+
+    def bilet_ara(self, _:ControlEvent):
+        konsol.log(self.nerden.value, self.nereye.value)
+        self.update()

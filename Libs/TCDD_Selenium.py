@@ -54,6 +54,8 @@ class TCDD:
             }
         ).drop(columns="sil").dropna().reset_index(drop=True)
 
+        panda_veri = panda_veri[panda_veri["Çıkış"].str.contains("No records found.") == False]
+
         panda_veri["Tren Adı"] = panda_veri["Tren Adı"].str.replace("i  ", "")
         panda_veri["Tren Adı"] = panda_veri["Tren Adı"].str.replace("StandartEsnek", "")
 
@@ -61,4 +63,14 @@ class TCDD:
         panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.replace(r"\(([0-9]*)\)", r"-\1-\n", regex=True)
         panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.rstrip("\n")
 
-        return loads(panda_veri.to_json(orient="records"))
+        __veriler = loads(panda_veri.to_json(orient="records"))
+        for veri in __veriler:
+            vagon_tipleri = [
+                vagon_tipi
+                for vagon_tipi in veri["Vagon Tipi"].split("\n")
+                    if not vagon_tipi.endswith("-0-")
+            ]
+            veri["Vagon Tipi"] = "\n".join(vagon_tipleri)
+            veri["Vagon Tipi"] = veri["Vagon Tipi"].rstrip("\n")
+
+        return [veri for veri in __veriler if veri["Vagon Tipi"]]

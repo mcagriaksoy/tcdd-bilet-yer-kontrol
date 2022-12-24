@@ -6,15 +6,6 @@ def list2df(veriler:list) -> DataTable:
     anahtarlar = list(veriler[0].keys())
     kolonlar   = [DataColumn(Text(anahtar)) for anahtar in anahtarlar]
 
-    for veri in veriler:
-        vagon_tipleri = [
-            vagon_tipi
-              for vagon_tipi in veri["Vagon Tipi"].split("\n")
-                if not vagon_tipi.endswith("-0-")
-        ]
-        veri["Vagon Tipi"] = "\n".join(vagon_tipleri)
-        veri["Vagon Tipi"] = veri["Vagon Tipi"].rstrip("\n")
-
     return DataTable(
         border_radius     = 10,
         border            = border.all(2),

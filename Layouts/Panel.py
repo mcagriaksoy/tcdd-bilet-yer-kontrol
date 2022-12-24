@@ -41,11 +41,11 @@ class Panel(UserControl):
             Column(
                 [
                     Row([self.baslik], alignment="center"),
-                    Row([], alignment="center", height=25),
+                    Row([],            alignment="center", height=25),
                     ResponsiveRow([self.nerden, self.nereye], alignment="center"),
-                    Row([self.tarih], alignment="center"),
-                    Row([self.ara_buton], alignment="center"),
-                    Row([self.araniyor], alignment="center"),
+                    Row([self.tarih],       alignment="center"),
+                    Row([self.ara_buton],   alignment="center"),
+                    Row([self.araniyor],    alignment="center"),
                     Row([self.cikti_alani], alignment="center")
                 ]
             )

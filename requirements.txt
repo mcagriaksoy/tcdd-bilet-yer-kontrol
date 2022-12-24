@@ -7,3 +7,4 @@ flet
 pandas
 tabulate
 notify-py
+pyinstaller

@@ -23,7 +23,7 @@ install:
   - pip install -r requirements.txt
 
 build_script:
-  - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets:Assets" --add-data "Resimler:Resimler" --add-data "selenium-stealth:." --icon "Resimler/TCDD.png" --collect-all certifi
+  - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets:Assets" --add-data "Resimler:Resimler" --icon "Resimler/TCDD.png" --collect-all certifi
 
 deploy:
   - provider: GitHub
@@ -39,7 +39,7 @@ for:
       - 7z a TCDD-windows.zip %CD%\dist\*.exe
 
     build_script:
-      - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets;Assets" --add-data "Resimler;Resimler" --add-data "selenium-stealth;." --icon "Resimler/TCDD.png" --collect-all certifi
+      - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets;Assets" --add-data "Resimler;Resimler" --icon "Resimler/TCDD.png" --collect-all certifi
 
     artifacts:
       - path: TCDD-windows.zip

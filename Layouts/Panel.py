@@ -62,7 +62,7 @@ class Panel(UserControl):
         konsol.log(self.nerden.value, self.nereye.value, self.tarih.value)
         bilet_json  = self.tcdd.bilet_ara(self.nerden.value, self.nereye.value, self.tarih.value)
         bilet_tablo = tabulate(bilet_json, headers="keys", tablefmt="github")
-        konsol.print(bilet_tablo)
+        konsol.print(bilet_json)
         self.arama_gizle(False)
 
         self.sayfa.add(

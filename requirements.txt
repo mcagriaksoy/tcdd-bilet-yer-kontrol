@@ -5,3 +5,4 @@ Kekik
 SelSik
 flet
 pandas
+tabulate

@@ -38,8 +38,8 @@ class TCDD:
         _tarih.clear()
         _tarih.send_keys(tarih)
 
-        _sorgula = self.selsik.eleman_bekle("//button[@id='btnSeferSorgula']")
-        self.tarayici.execute_script("arguments[0].click();", _sorgula)
+        _sorgula_buton = self.selsik.eleman_bekle("//button[@id='btnSeferSorgula']")
+        self.tarayici.execute_script("arguments[0].click();", _sorgula_buton)
 
         self.selsik.eleman_bekle("//tbody[@id='mainTabView:gidisSeferTablosu_data']")
         sefer_tablo = self.selsik.kaynak_kod("//div[@id='mainTabView:gidisSeferTablosu']//table").get()

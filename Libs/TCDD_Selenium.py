@@ -20,7 +20,7 @@ class TCDD:
             "Konya"
         ]
 
-        self.selsik   = SelSik(self.tcdd_sorgu_sayfa, pencere="gizli")
+        self.selsik   = SelSik(self.tcdd_sorgu_sayfa, pencere="gizli", gizlilik=False)
         self.tarayici = self.selsik.tarayici
 
     def bilet_ara(self, nereden:str, nereye:str, tarih:str) -> list[dict] | None:

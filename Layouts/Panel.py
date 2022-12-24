@@ -29,8 +29,8 @@ class Panel(UserControl):
         self.sayfa.update()
 
         self.baslik      = Text("TCDD Bilet Kontrol Etme Arayüzü", size=25, weight="bold", color="#EF7F1A")
-        self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", col={"md": 4}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
-        self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  col={"md": 4}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
+        self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", col={"md": 2}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
+        self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  col={"md": 2}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
         self.tarih       = TextField(label="Tarih",   hint_text=bugun(), value=bugun(), on_submit=lambda e: self.bilet_ara(e))
         self.ara_buton   = FloatingActionButton(text="Bilet Ara", icon=icons.SEARCH, on_click=self.bilet_ara)
         self.araniyor    = ProgressRing(visible=False)
@@ -42,7 +42,7 @@ class Panel(UserControl):
                 [
                     Row([self.baslik], alignment="center"),
                     Row([], alignment="center", height=25),
-                    ResponsiveRow([self.nerden, self.nereye], alignment="center", run_spacing={"xs": 10}),
+                    ResponsiveRow([self.nerden, self.nereye], alignment="center"),
                     Row([self.tarih], alignment="center"),
                     Row([self.ara_buton], alignment="center"),
                     Row([self.araniyor], alignment="center"),

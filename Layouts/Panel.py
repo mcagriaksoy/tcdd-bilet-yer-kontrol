@@ -2,15 +2,16 @@
 
 from CLI           import konsol
 from flet.page     import Page, ControlEvent
-from flet          import UserControl, Container, Column, Row, ResponsiveRow, Text, Dropdown, TextField, FloatingActionButton, icons, ProgressRing, Markdown, MarkdownExtensionSet, colors
+from flet          import UserControl, Container, Column, Row, ResponsiveRow, Text, Dropdown, TextField, FloatingActionButton, icons, ProgressRing, Markdown, MarkdownExtensionSet, colors, DataTable
 from flet.dropdown import Option as DropdownOption
 from Libs          import TCDD, bildirim
 
 from datetime import datetime
 bugun = lambda: datetime.now().strftime("%d.%m.%Y")
 
-from tabulate import tabulate
-from regex    import findall
+from tabulate     import tabulate
+from regex        import findall
+from Libs.list2df import list2df
 
 class Panel(UserControl):
     def __init__(self, sayfa:Page):
@@ -28,8 +29,8 @@ class Panel(UserControl):
         self.sayfa.update()
 
         self.baslik      = Text("TCDD Bilet Kontrol Etme Arayüzü", size=25, weight="bold", color="#EF7F1A")
-        self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
-        self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
+        self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", col={"md": 4}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
+        self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  col={"md": 4}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
         self.tarih       = TextField(label="Tarih",   hint_text=bugun(), value=bugun(), on_submit=lambda e: self.bilet_ara(e))
         self.ara_buton   = FloatingActionButton(text="Bilet Ara", icon=icons.SEARCH, on_click=self.bilet_ara)
         self.araniyor    = ProgressRing(visible=False)
@@ -41,7 +42,7 @@ class Panel(UserControl):
                 [
                     Row([self.baslik], alignment="center"),
                     Row([], alignment="center", height=25),
-                    ResponsiveRow([self.nerden, self.nereye], alignment="center"),
+                    ResponsiveRow([self.nerden, self.nereye], alignment="center", run_spacing={"xs": 10}),
                     Row([self.tarih], alignment="center"),
                     Row([self.ara_buton], alignment="center"),
                     Row([self.araniyor], alignment="center"),
@@ -51,7 +52,7 @@ class Panel(UserControl):
         )
 
     def arama_gizle(self, gorunum:bool):
-        if isinstance(self.sayfa.controls[-1], Markdown):
+        if isinstance(self.sayfa.controls[-1], (Markdown, DataTable)):
             self.sayfa.controls.pop(-1)
             self.sayfa.update()
 
@@ -105,14 +106,16 @@ class Panel(UserControl):
 
         konsol.print(bilet_json)
 
-        self.sayfa.add(
-            Markdown(
-                value         = tabulate(bilet_json, headers="keys", tablefmt="github"),
-                selectable    = True,
-                extension_set = MarkdownExtensionSet.GITHUB_WEB,
-                code_theme    = "dracula"
-            )
-        )
+        # self.sayfa.add(
+        #     Markdown(
+        #         value         = tabulate(bilet_json, headers="keys", tablefmt="github"),
+        #         selectable    = True,
+        #         extension_set = MarkdownExtensionSet.GITHUB_WEB,
+        #         code_theme    = "dracula"
+        #     )
+        # )
+
+        self.sayfa.add(list2df(bilet_json))
 
         tren_sayisi  = len(bilet_json)
         bilet_sayisi = sum(

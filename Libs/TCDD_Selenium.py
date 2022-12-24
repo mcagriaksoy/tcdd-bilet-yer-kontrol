@@ -58,7 +58,7 @@ class TCDD:
         panda_veri["Tren Adı"] = panda_veri["Tren Adı"].str.replace("StandartEsnek", "")
 
         # re.sub(re.compile(r"\(([0-9]*)\)"), r"- \1 \\", vagon_tipi)
-        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.replace(r"\(([0-9]*)\)", r"-\1- , ", regex=True)
-        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.rstrip(", ")
+        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.replace(r"\(([0-9]*)\)", r"-\1-\n", regex=True)
+        panda_veri["Vagon Tipi"] = panda_veri["Vagon Tipi"].str.rstrip("\n")
 
         return loads(panda_veri.to_json(orient="records"))

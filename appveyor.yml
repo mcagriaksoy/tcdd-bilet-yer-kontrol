@@ -1,0 +1,67 @@
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+
+version: 1.{build}
+build:
+  verbosity: minimal
+
+environment:
+  GITHUB_TOKEN:
+    # * https://ci.appveyor.com/tools/encrypt
+    secure: h4A1e3+KTJ+h28Rv9IMSX6fyXBAvLETjfMv5tjXB3y7cZq+Kxg60myRpuVeG24Ei
+  APPVEYOR_REPO_TAG: true
+
+image:
+  - Visual Studio 2019
+  - macOS
+  - Ubuntu
+
+skip_branch_with_pr: true
+test: off
+stack: python 3.10
+
+install:
+  - pip install -r requirements.txt
+
+build_script:
+  - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets:Assets" --icon "Resimler/TCDD.png" --collect-all certifi
+
+deploy:
+  - provider: GitHub
+    auth_token: $(GITHUB_TOKEN)
+
+# * » Windows paketi
+for:
+  - matrix:
+      only:
+        - image: Visual Studio 2019
+
+    after_build:
+      - 7z a TCDD-windows.zip %CD%\dist\*.exe
+
+    build_script:
+      - pyinstaller main.py --name TCDD --noconsole --noconfirm --onefile --add-data "Assets;Assets" --icon "Resimler/TCDD.png" --collect-all certifi
+
+    artifacts:
+      - path: TCDD-windows.zip
+
+  # * » macOS paketi
+  - matrix:
+      only:
+        - image: macOS
+
+    after_build:
+      - tar -czvf TCDD-macos.tar.gz -C dist TCDD.app
+
+    artifacts:
+      - path: TCDD-macos.tar.gz
+
+  # * » Linux paketi
+  - matrix:
+      only:
+        - image: Ubuntu
+
+    after_build:
+      - tar -czvf TCDD-linux.tar.gz -C dist TCDD
+
+    artifacts:
+      - path: TCDD-linux.tar.gz

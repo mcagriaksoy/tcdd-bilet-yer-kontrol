@@ -27,7 +27,7 @@ class Panel(UserControl):
         self.sayfa.on_window_event      = kapanirken
         self.sayfa.update()
 
-        self.baslik      = Text("TCDD Bilet Arama Botu", size=25, weight="bold", color="#EF7F1A")
+        self.baslik      = Text("TCDD Bilet Kontrol Etme Arayüzü", size=25, weight="bold", color="#EF7F1A")
         self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
         self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
         self.tarih       = TextField(label="Tarih",   hint_text=bugun(), value=bugun(), on_submit=lambda e: self.bilet_ara(e))

@@ -6,7 +6,7 @@ from flet          import UserControl, Container, Column, Row, Text, Dropdown, T
 from flet.dropdown import Option as DropdownOption
 from Libs          import TCDD
 
-from datetime      import datetime
+from datetime import datetime
 bugun = datetime.now().strftime("%d.%m.%Y")
 
 from tabulate import tabulate
@@ -60,13 +60,14 @@ class Panel(UserControl):
 
         self.arama_gizle(True)
         konsol.log(self.nerden.value, self.nereye.value, self.tarih.value)
-        biletler = self.tcdd.bilet_ara(self.nerden.value, self.nereye.value, self.tarih.value)
-        konsol.log(biletler)
+        bilet_json  = self.tcdd.bilet_ara(self.nerden.value, self.nereye.value, self.tarih.value)
+        bilet_tablo = tabulate(bilet_json, headers="keys", tablefmt="github")
+        konsol.print(bilet_tablo)
         self.arama_gizle(False)
 
         self.sayfa.add(
             Markdown(
-                value         = tabulate(biletler, headers="keys", tablefmt="github"),
+                value         = bilet_tablo,
                 selectable    = True,
                 extension_set = MarkdownExtensionSet.GITHUB_WEB
             )

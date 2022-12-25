@@ -11,7 +11,7 @@ bugun = lambda: datetime.now().strftime("%d.%m.%Y")
 
 from tabulate     import tabulate
 from regex        import findall
-from Libs.list2df import list2df
+from Libs.List2DT import list2dt
 
 class Panel(UserControl):
     def __init__(self, sayfa:Page):
@@ -28,20 +28,20 @@ class Panel(UserControl):
         self.sayfa.on_window_event      = kapanirken
         self.sayfa.update()
 
-        self.baslik      = Text("TCDD Bilet Kontrol Etme Arayüzü", size=25, weight="bold", color="#EF7F1A")
+        self.baslik      = Text("TCDD Bilet Kontrol Etme Arayüzü", size=22, weight="bold", color="#EF7F1A")
         self.nerden      = Dropdown(label="Nereden?", hint_text="Nereden?", col={"md": 2}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar], autofocus=True)
         self.nereye      = Dropdown(label="Nereye?",  hint_text="Nereye?",  col={"md": 2}, options=[DropdownOption(durak) for durak in self.tcdd.duraklar])
         self.tarih       = TextField(label="Tarih",   hint_text=bugun(), value=bugun(), on_submit=lambda e: self.bilet_ara(e))
         self.ara_buton   = FloatingActionButton(text="Bilet Ara", icon=icons.SEARCH, on_click=self.bilet_ara)
         self.araniyor    = ProgressRing(visible=False)
-        self.cikti_alani = Text("Aramaya Hazır..", size=23, weight="bold", color=colors.CYAN_700, visible=True)
+        self.cikti_alani = Text("Aramaya Hazır..", size=18, weight="bold", color=colors.CYAN_700, visible=True)
 
     def build(self):
         return Container(
             Column(
                 [
                     Row([self.baslik], alignment="center"),
-                    Row([],            alignment="center", height=25),
+                    Row([],            alignment="center", height=self.baslik.size),
                     ResponsiveRow([self.nerden, self.nereye], alignment="center"),
                     Row([self.tarih],       alignment="center"),
                     Row([self.ara_buton],   alignment="center"),
@@ -127,5 +127,5 @@ class Panel(UserControl):
         )
         self.__bilgi_metni(f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu..", renk=colors.GREEN_700)
 
-        self.sayfa.add(list2df(bilet_json))
+        self.sayfa.add(list2dt(bilet_json))
         self.update()

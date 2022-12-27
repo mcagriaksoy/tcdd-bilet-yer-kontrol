@@ -80,8 +80,8 @@ class Panel(UserControl):
         self.update()
         return True
 
-    def __bilgi_metni(self, hata:str, renk:str=colors.RED_700):
-        self.cikti_alani.value = hata
+    def __bilgi_metni(self, bilgi_metni:str, renk:str=colors.RED_700):
+        self.cikti_alani.value = bilgi_metni
         self.cikti_alani.color = renk
         self.update()
         return False
@@ -97,7 +97,10 @@ class Panel(UserControl):
         self.arama_gizle(False)
 
         if not bilet_json:
-            self.__bilgi_metni("Bilet Bulunamadı..", renk=colors.PURPLE_700)
+            self.__bilgi_metni(
+                bilgi_metni = "Bilet Bulunamadı..",
+                renk        = colors.PURPLE_700
+            )
             bildirim(
                 baslik = f"{self.nerden.value} - {self.nereye.value}",
                 icerik = f"Bilet Bulunamadı. ~ {self.tarih.value}"
@@ -105,6 +108,22 @@ class Panel(UserControl):
             return None
 
         konsol.print(bilet_json)
+
+        tren_sayisi  = len(bilet_json)
+        bilet_sayisi = sum(
+            sum(int(sayi) for sayi in findall(r"-([0-9]*)-", tren["Vagon Tipi"]))
+                for tren in bilet_json
+        )
+
+        self.__bilgi_metni(
+            bilgi_metni = f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu..",
+            renk        = colors.GREEN_700
+        )
+        bildirim(
+            baslik = f"{self.nerden.value} - {self.nereye.value}",
+            icerik = f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu. ~ {self.tarih.value}"
+        )
+
 
         # self.sayfa.add(
         #     Markdown(
@@ -115,17 +134,6 @@ class Panel(UserControl):
         #     )
         # )
 
-        tren_sayisi  = len(bilet_json)
-        bilet_sayisi = sum(
-            sum(int(sayi) for sayi in findall(r"-([0-9]*)-", tren["Vagon Tipi"]))
-                for tren in bilet_json
-        )
-
-        bildirim(
-            baslik = f"{self.nerden.value} - {self.nereye.value}",
-            icerik = f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu. ~ {self.tarih.value}"
-        )
-        self.__bilgi_metni(f"{tren_sayisi} trende, {bilet_sayisi} adet bilet bulundu..", renk=colors.GREEN_700)
-
         self.sayfa.add(list2dt(bilet_json))
+
         self.update()

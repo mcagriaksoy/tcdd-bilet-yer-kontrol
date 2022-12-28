@@ -5,12 +5,12 @@
 <a href="https://KekikAkademi.org/Kahve" target="_blank"><img src="https://img.shields.io/badge/☕️-Kahve Ismarla-ffdd00" title="☕️ Kahve Ismarla" style="padding-left:5px;"></a>
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/a4xlukrevkecf4ov?svg=true)](https://ci.appveyor.com/project/keyiflerolsun/tcdd_bilet_kontrol)
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tcdd_bilet_kontrol)
-![PyPI - Status](https://img.shields.io/pypi/status/tcdd_bilet_kontrol)
-![PyPI](https://img.shields.io/pypi/v/tcdd_bilet_kontrol)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/tcdd_bilet_kontrol)
-![PyPI - Wheel](https://img.shields.io/pypi/wheel/tcdd_bilet_kontrol)
-![PyPI - License](https://img.shields.io/pypi/l/tcdd_bilet_kontrol)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tcdd-bilet-kontrol)
+![PyPI - Status](https://img.shields.io/pypi/status/tcdd-bilet-kontrol)
+![PyPI](https://img.shields.io/pypi/v/tcdd-bilet-kontrol)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/tcdd-bilet-kontrol)
+![PyPI - Wheel](https://img.shields.io/pypi/wheel/tcdd-bilet-kontrol)
+![PyPI - License](https://img.shields.io/pypi/l/tcdd-bilet-kontrol)
 
 *TCDD Bilet Kontrol Etme Arayüzü*
 
@@ -23,7 +23,7 @@
 
 ```bash
 # Yüklemek
-pip install -U tcdd_bilet_kontrol
+pip install -U tcdd-bilet-kontrol
 
 # Çalıştırmak
 tcdd_bilet_kontrol

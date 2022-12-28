@@ -3,7 +3,7 @@
 ![Repo Boyutu](https://img.shields.io/github/repo-size/keyiflerolsun/tcdd_bilet_kontrol)
 ![Görüntülenme](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/keyiflerolsun/tcdd_bilet_kontrol&title=Görüntülenme)
 <a href="https://KekikAkademi.org/Kahve" target="_blank"><img src="https://img.shields.io/badge/☕️-Kahve Ismarla-ffdd00" title="☕️ Kahve Ismarla" style="padding-left:5px;"></a>
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/a4xlukrevkecf4ov?svg=true)](https://ci.appveyor.com/project/keyiflerolsun/tcdd_bilet_kontrol)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/lkfsclo33bi52oxd?svg=true)](https://ci.appveyor.com/project/keyiflerolsun/tcdd_bilet_kontrol)
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tcdd-bilet-kontrol)
 ![PyPI - Status](https://img.shields.io/pypi/status/tcdd-bilet-kontrol)

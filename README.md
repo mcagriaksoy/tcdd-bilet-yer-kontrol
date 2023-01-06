@@ -1,14 +1,22 @@
 # Mehmet Çağrı Aksoy UPDATE!
 
-- Aralık 2022 Güncellemeleri
+v1.3
+
+- icon eklendi
+- .exe düzeltildi.
+- selenium performansı arttırıldı.
+- loglama mekanizması düzeltildi.
+- bilinen çökme sorunları çözüldü.
+- yeni rotalar eklendi.
+
+SS:
+![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/ss2.png)
+
 
 v1.1
 - Slider eklendi.
 - Bilet bulunca ortaya çıkan popup eklendi!
 - Bulunan kişi sayısındaki hata giderildi.
-
-SS:
-![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/ss2.png)
 
 v1.0
 - GUI Düzenlendi, loglama mekanizması eklendi, stdout loglara yazdırıldı.
@@ -31,18 +39,16 @@ v1.0
 
 - Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır 
 
-`main.py -> mainLoop()`fonksiyonu yerinden istediğiniz gibi ayarlayabilirsiniz.
-
 ### Paket Kurulumu 
 `$ pip install -r requirements.txt`
 
 ### Çalıştırılabilir .exe oluşturma
 
 ```sh
-$ pyinstaller --onefile --noconsole main.py
+$ pyinstaller --onefile --noconsole --icon=icon.ico -F main.py
 ```
 
-Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/tcddBiletYerKontrol_v1.1.zip
+Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/tcddBiletYerKontrol_v1.3.zip
 .exe sürümünü indirebilirsiniz.
 
 ### Kullanımı

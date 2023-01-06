@@ -12,24 +12,6 @@ from threading import Thread
 from datetime import date
 import Control, Rota, DriverSetting , DriverGet
 
-class PushSafer():
-    def sendNotification(self, baslik, mesaj):
-        url = 'https://www.pushsafer.com/api'
-        post_fields = {                      
-            "t" : baslik,
-            "m" : mesaj,
-            "s" : 20,
-            "pr": 2,
-            "v" : 3,
-            "i" : 9,
-            "d" : 'a',
-            "k" : "key"
-            }
-        request = Request(url, urlencode(post_fields).encode())
-        json = urlopen(request).read().decode()
-
-pushSafer = PushSafer()
-
 def driverSetting():
     return DriverSetting.DriverSetting().driverUP()
 
@@ -41,10 +23,10 @@ def rota(driver,first_location,last_location,date):
 
 def control(driver,timee):
     response = Control.Control(driver,timee).sayfaKontrol()
-    
     if response == "successful":
-        sg.Popup('Heyy Orada mısın? Biletin bulundu. Satın alabilirsin', keep_on_top=True)
-        pushSafer.sendNotification('TCDD Bilet Kontrol', "2'den fazla bilet bulundu")
+        clicked = sg.Popup('Hey Orada mısın? Biletin bulundu. Satın alabilirsin', keep_on_top=True,  button_type=5)
+        if clicked == 'OK':
+            sys.stdout.write('\nPopup Kapatildi!')
         driver.quit()
         sys.exit()
 
@@ -65,7 +47,7 @@ layout = [
             [sg.Multiline("",size=(32,8),key='log',autoscroll=True, reroute_stdout=True)]
          ]
 
-window = sg.Window('TCDD Bilet Arama Botu',layout,size = (300, 350),resizable = False,font=font, element_justification='l')
+window = sg.Window('TCDD Bilet Arama Botu',layout, icon=r'icon.ico', size = (300, 350),resizable = False,font=font, element_justification='l')
 
 def mainLoop():
 

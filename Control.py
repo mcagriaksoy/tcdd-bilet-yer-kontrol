@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Birol Emekli
+@author: Birol Emekli, Mehmet Çağrı Aksoy
 """
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By

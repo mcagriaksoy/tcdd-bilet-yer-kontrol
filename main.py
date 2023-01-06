@@ -27,7 +27,6 @@ class PushSafer():
             }
         request = Request(url, urlencode(post_fields).encode())
         json = urlopen(request).read().decode()
-        print(json)
 
 pushSafer = PushSafer()
 

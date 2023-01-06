@@ -1,6 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+import sys
 
 class DriverGet:
     def __init__(self,driver,url="https://ebilet.tcddtasimacilik.gov.tr/view/eybis/tnmGenel/tcddWebContent.jsf"):
@@ -10,4 +11,4 @@ class DriverGet:
     def driverGet(self):
         self.driver.get(self.url)
         WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#biletAramaForm > div:nth-child(3) > p:nth-child(4)")))
-        print("Sayfa yüklendi")
+        sys.stdout.write("Sayfa yüklendi")

@@ -19,7 +19,7 @@ class Control:
         try:
             element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu_data")))
             if element != "":
-                print("Aranan  saat : " + self.zaman)
+                sys.stdout.write("\nAranan  saat : " + self.zaman)
                 for row in range(1, 15):
                     try:
                          aranan = self.driver.find_element(By.XPATH ,'/html/body/div[3]/div[2]/div/div/div/div/form/div[1]/div/div[1]/div/div/div/div[1]/div/div/div/table/tbody/tr[{0}]/td[1]/span'.format(row)).text 
@@ -30,34 +30,34 @@ class Control:
                             if message[22] != '0':
                                 
                                 if int(message[22]) > 2:
-                                    print("Boş koltuk sayısı: "+ message[22] + message[23])
-                                    print("HARİKA! Fazla bilet bulundu.. Satın Alabilirsin")
+                                    sys.stdout.write("\nBoş koltuk sayısı: "+ message[22] + message[23])
+                                    sys.stdout.write("\nHARİKA! Fazla bilet bulundu.. Satın Alabilirsin")
                                     return "successful"
                                 else:
-                                    print("Boş koltuk sayısı: "+ message[22] +" Sadece Engelli Bileti Kaldı!")
-                                    print("Arama tekrar deneniyor...")
+                                    sys.stdout.write("\nBoş koltuk sayısı: "+ message[22] +" Sadece Engelli Bileti Kaldı!")
+                                    sys.stdout.write("\nArama tekrar deneniyor...")
                                     message = ""
                                     self.driver.quit()
                                     return
                                 
                             else:
-                                print("Aradığınız seferde hiç boş yer yok...")
+                                sys.stdout.write("\nAradığınız seferde hiç boş yer yok...")
                                 self.driver.quit()
                                 message = ""
                                 return
                     except:
-                        print ("Saatinizde hata var...")
+                        sys.stdout.write("\nSaatinizde hata var...")
                         return
                         #self.driver.quit()
                         #sys.exit()
             else:
-                print("Aradığınız seferde boş yer yoktur...")
+                sys.stdout.write("\nAradığınız seferde boş yer yoktur...")
 
         except (TimeoutException,NoSuchElementException) as ex:
-            print ("Tekrar deneniyor...")
+            sys.stdout.write("\nTekrar deneniyor...")
             self.driver.close()
             return
         except UnexpectedAlertPresentException as ex1:
-            print("Güzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz")
+            sys.stdout.write("\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz")
             self.driver.quit()
             exit()       

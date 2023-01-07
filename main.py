@@ -11,6 +11,7 @@ import PySimpleGUI as sg
 from threading import Thread
 from datetime import date
 import Control, Rota, DriverSetting , DriverGet
+import winsound
 
 def driverSetting():
     return DriverSetting.DriverSetting().driverUP()
@@ -24,9 +25,10 @@ def rota(driver,first_location,last_location,date):
 def control(driver,timee):
     response = Control.Control(driver,timee).sayfaKontrol()
     if response == "successful":
-        clicked = sg.Popup('Hey Orada mısın? Biletin bulundu. Satın alabilirsin', keep_on_top=True,  button_type=5)
-        if clicked == 'OK':
-            sys.stdout.write('\nPopup Kapatildi!')
+        duration = 10000  # milliseconds
+        freq = 440  # Hz
+        winsound.Beep(freq, duration)
+        sg.Popup('Hey Orada mısın? Biletin bulundu. Satın alabilirsin', keep_on_top=True,  button_type=5)
         driver.quit()
         sys.exit()
 

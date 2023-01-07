@@ -1,4 +1,6 @@
 # Mehmet Çağrı Aksoy UPDATE!
+v1.4
+- sesli uyarı eklendi.
 
 v1.3
 

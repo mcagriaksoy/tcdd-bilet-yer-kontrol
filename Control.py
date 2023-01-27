@@ -27,7 +27,7 @@ class Control:
                          if self.zaman == aranan:
                             sleep(0.5)
                             message=self.driver.find_element(By.XPATH ,'//*[@id="mainTabView:gidisSeferTablosu:{0}:j_idt109:0:somVagonTipiGidis1_label"]'.format(row - 1)).text
-                            if message[22] != '0':
+                            if message[22] != '0': 
                                 
                                 if int(message[22]) > 2:
                                     sys.stdout.write("\nBoş koltuk sayısı: "+ message[22] + message[23])
@@ -59,5 +59,5 @@ class Control:
             return
         except UnexpectedAlertPresentException as ex1:
             sys.stdout.write("\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz")
-            self.driver.quit()
-            exit()       
+            return -1
+            

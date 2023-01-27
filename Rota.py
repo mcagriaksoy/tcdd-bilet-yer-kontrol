@@ -23,9 +23,9 @@ class Rota:
             text1.clear()
             text1.send_keys(self.first_location)
             sys.stdout.write('\nNereden: ' + self.first_location)
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/ul[1]/li/a")))
+            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[1]/p[4]")))
             ActionChains(self.driver).move_to_element(element).perform()
             element.click()
             
@@ -33,22 +33,22 @@ class Rota:
             text2.clear()
             text2.send_keys(self.last_location)
             sys.stdout.write('\nNereye: ' + self.last_location)            
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/ul[2]/li/a")))
+            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[1]/p[6]/span/input")))
             ActionChains(self.driver).move_to_element(element).perform()
             element.click()
-            time.sleep(0.5)
+            time.sleep(0.3)
 
             date = self.driver.find_element(By.CSS_SELECTOR ,"#trCalGid_input")
             date.clear()
             date.send_keys(self.date)
             sys.stdout.write('\nTarih: '+self.date)
-            time.sleep(0.5)
-            button = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[3]/p[3]/button/span")))
+            time.sleep(0.3)
+            
+            button = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[3]/p[3]/button")))
             self.driver.execute_script("arguments[0].click();", button)
             
         except:
-            sys.stdout.write("\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz")
-            self.driver.quit()
-            exit()
+            sys.stdout.write("\nGüzergah rota bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz.")
+            return -1

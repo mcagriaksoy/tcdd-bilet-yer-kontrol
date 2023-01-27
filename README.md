@@ -1,4 +1,13 @@
-# Mehmet Çağrı Aksoy UPDATE!
+# Mehmet Çağrı Aksoy 2023 geliştirme ve önerilere açığım :=)
+v1.5
+- Yorucu bir release
+- Tüm tcdd arayüzü değiştiği için selenium tekrar configure edildi.
+- tcdd sitesi bloklamasına karşı, gizli chrome araması kapatıldı, artık chrome program ile birlikte açılıyor.
+- selenium hata ayarları güncellendi.
+- return mekanizması eklendi, hata kodları ve butonlar güncellendi.
+- durak isimleri güncellendi.
+- birden fazla aramanın önüne geçebilmek için buton kilitleme işlevi eklendi.
+
 v1.4
 - sesli uyarı eklendi.
 

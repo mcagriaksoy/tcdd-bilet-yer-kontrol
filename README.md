@@ -59,8 +59,9 @@ v1.0
 $ pyinstaller --onefile --noconsole --icon=icon.ico -F main.py
 ```
 
-Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/tcddBiletYerKontrol_v1.4.zip
-.exe sürümünü indirebilirsiniz.
+Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/tcddBiletYerKontrol_v1.5.zip
+
+exe sürümünü indirebilirsiniz.
 
 ### Kullanımı
 ```sh

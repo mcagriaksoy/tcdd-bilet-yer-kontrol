@@ -1,4 +1,4 @@
-# Mehmet Çağrı Aksoy 2023 geliştirme ve önerilere açığım :=)
+
 v1.5
 - Yorucu bir release
 - Tüm tcdd arayüzü değiştiği için selenium tekrar configure edildi.

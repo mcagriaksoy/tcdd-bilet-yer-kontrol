@@ -13,7 +13,14 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 
 ## Versions
 
+v1.6
+
+- Linux, macOS destegi eklendi.
+- PyLint sorunlari cozuldu.
+- Dizinleme yapildi.
+
 v1.5
+
 - Yorucu bir release
 - Tüm tcdd arayüzü değiştiği için selenium tekrar configure edildi.
 - tcdd sitesi bloklamasına karşı, gizli chrome araması kapatıldı, artık chrome program ile birlikte açılıyor.
@@ -23,6 +30,7 @@ v1.5
 - birden fazla aramanın önüne geçebilmek için buton kilitleme işlevi eklendi.
 
 v1.4
+
 - sesli uyarı eklendi.
 
 v1.3
@@ -35,19 +43,19 @@ v1.3
 - yeni rotalar eklendi.
 
 SS:
-![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/ss2.png)
-
+![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/screenshot.png)
 
 v1.1
+
 - Slider eklendi.
 - Bilet bulunca ortaya çıkan popup eklendi!
 - Bulunan kişi sayısındaki hata giderildi.
 
 v1.0
+
 - GUI Düzenlendi, loglama mekanizması eklendi, stdout loglara yazdırıldı.
 - Yeni durak isimleri eklendi.
 - Mekanizmalar yeniden düzenlendi.
-
 
 - Ocak 2023 Gelecek Güncellemeler
 - .exe sürümü yayımlanacak - DONE!
@@ -62,9 +70,10 @@ v1.0
 
 - Uygulama TCDD sitesine özel tasarlanmıştır.
 
-- Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır 
+- Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır
 
-### Paket Kurulumu 
+### Paket Kurulumu
+
 `$ pip install -r requirements.txt`
 
 ### Çalıştırılabilir .exe oluşturma
@@ -78,6 +87,7 @@ Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/mast
 exe sürümünü indirebilirsiniz.
 
 ### Kullanımı
+
 ```sh
 $ python main.py
 ```

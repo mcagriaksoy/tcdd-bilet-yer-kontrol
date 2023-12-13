@@ -1,5 +1,6 @@
 """
-@author: Mehmet Çağrı Aksoy
+Base version @author: Birol Emekli, https://github.com/bymcs
+Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
 import sys

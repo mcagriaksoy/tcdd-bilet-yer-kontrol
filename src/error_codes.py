@@ -1,4 +1,6 @@
-
+"""
+Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
+"""
 
 SAAT_HATASI = 1
 TARIH_HATASI = 2

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: Birol Emekli, Mehmet Çağrı Aksoy
+Base version @author: Birol Emekli, https://github.com/bymcs
+Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 import sys
 from time import sleep

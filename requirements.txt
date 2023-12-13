@@ -1,4 +1,6 @@
-# python3 -m  pipreqs.pipreqs --force ./
+#python3 -m  pipreqs.pipreqs --force ./
+
+PySimpleGUI==4.60.5
 PySimpleGUI==4.60.5
 selenium==4.16.0
 webdriver_manager==4.0.1

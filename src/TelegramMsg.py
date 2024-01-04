@@ -21,6 +21,5 @@ class TelegramMsg:
         ''' Send a message to your Telegram bot when the event occurs.'''
         bot = Bot(token=bot_token)
 
-        if event:
-            bot.send_message(
-                chat_id=chat_id, text="Hey biletin bulundu! Acele et!")
+        bot.send_message(
+            chat_id=chat_id, text="Hey biletin bulundu! Acele et!")

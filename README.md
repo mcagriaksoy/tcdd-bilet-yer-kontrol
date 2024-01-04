@@ -12,7 +12,8 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="forks - tcdd-bilet-yer-kontrol"></a>
 
 ## Indir
-[![Download - v1.7](https://img.shields.io/badge/Download-v1.7-2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip
+[![Download - v1.7](https://img.shields.io/static/v1?label=Download&message=v1.7&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip)
+
 ## Versions
 v1.7
 

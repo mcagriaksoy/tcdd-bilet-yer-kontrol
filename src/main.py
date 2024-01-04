@@ -13,6 +13,7 @@ from time import sleep
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+import TelegramMsg
 import Control
 import DriverGet
 import DriverSetting
@@ -56,7 +57,7 @@ def kill_chrome():
         os.system("pkill chrome")
 
 
-def control(driver, time, delayTime):
+def control(driver, time, delayTime, telegram_msg, bot_token, chat_id, ses):
     ''' Sayfada yer var mı yok mu kontrol eder.'''
     response = Control.Control(driver, time).sayfa_kontrol()
     if response == ErrCodes.BASARILI:
@@ -64,10 +65,18 @@ def control(driver, time, delayTime):
                  keep_on_top=True,
                  button_type=5)
 
-        if sys.platform == "win32":
-            winsound.Beep(440, 20000)
-        else:
-            os.system("beep -f 440 -l 20000")
+        # Ses cal!
+        if ses:
+            if sys.platform == "win32":
+                winsound.Beep(440, 20000)
+            else:
+                os.system("beep -f 440 -l 20000")
+
+        # Telegram mesaji gonder!
+        if telegram_msg:
+            TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
+
+        # Chrome'u kapat!
         kill_chrome()
         return
 
@@ -91,7 +100,8 @@ now = datetime.datetime.now()
 currentTime = now.strftime("%H:%M")
 
 layout = [
-    [[sg.Column([[sg.Text('github.com/mcagriaksoy')]], justification='center')]],
+    [[sg.Column([[sg.Text('by Mehmet Cagri Aksoy 2022-2024')]],
+                justification='center')]],
     [sg.Text('Nereden :', size=(7, 1)), sg.Combo(['İstanbul(Söğütlüçeşme)', 'İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)',
                                                   'Gebze', 'Bilecik YHT', 'Eskişehir', 'Ankara Gar', 'Konya', 'Kars', 'Erzurum'], default_value='İstanbul(Söğütlüçeşme)', key='nereden')],
     [sg.Text('Nereye :', size=(7, 1)), sg.Combo(['İstanbul(Söğütlüçeşme)', 'İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)',
@@ -103,6 +113,18 @@ layout = [
     [sg.Text('Arama Sıklığını seçiniz: (dakikada bir)')],
     [sg.Slider(range=(1, 10), key='delayTime', orientation='h', size=(
         35, 25), default_value=1, enable_events=True)],
+
+    [sg.Text('Telegram Ayarlari: (Opsiyonel)')],
+    [sg.Checkbox('Bilet bulunursa telegram mesaji gönder!',
+                 default=False, key='telegram_msg')],
+    [sg.Text('Telegram Bot Token:')],
+    [sg.InputText(key='bot_token', size=(35, 5))],
+    [sg.Text('Telegram Chat ID:')],
+    [sg.InputText(key='chat_id', size=(35, 5))],
+
+    [sg.Text('Ses Ayarlari: (Opsiyonel)')],
+    [sg.Checkbox('Bilet bulunursa ses çal!', default=True, key='ses')],
+
     [sg.Button('Aramaya Başla'), sg.Button('Durdur!'), sg.Button('Kapat!')],
     [sg.Multiline("", size=(32, 8), key='log',
                   autoscroll=True, reroute_stdout=True)]
@@ -111,20 +133,21 @@ layout = [
 window = sg.Window('TCDD Bilet Arama Botu',
                    layout,
                    icon=r'./icon.ico',
-                   size=(300, 350),
+                   size=(325, 500),
                    resizable=False,
                    font=font,
                    element_justification='l').Finalize()
 window['Durdur!'].update(disabled=True)
 
 
-def thread1(delayTime):
+def thread1(delayTime, telegram_msg, bot_token, chat_id, ses):
+    ''' Arama dongusu!'''
     while True:
         ''' Arama dongusu!'''
         driver = driver_setting()
         driver_get(driver)
         route(driver, nereden, nereye, tarih)
-        control(driver, saat, delayTime)
+        control(driver, saat, delayTime, telegram_msg, bot_token, chat_id, ses)
         sleep(30)
 
 
@@ -158,5 +181,10 @@ while True:
         tarih = values['tarih']
         saat = values['saat']
         delayTime = values['delayTime']
-        t1 = Thread(target=thread1, args=(delayTime,))
+        telegram_msg = values['telegram_msg']
+        bot_token = values['bot_token']
+        chat_id = values['chat_id']
+        ses = values['ses']
+        t1 = Thread(target=thread1, args=(
+            delayTime, telegram_msg, bot_token, chat_id, ses))
         t1.start()

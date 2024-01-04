@@ -11,6 +11,8 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/stars/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="stars - tcdd-bilet-yer-kontrol"></a>
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="forks - tcdd-bilet-yer-kontrol"></a>
 
+## Indir
+[![Download - v1.7](https://img.shields.io/badge/Download-v1.7-2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip
 ## Versions
 v1.7
 
@@ -73,28 +75,29 @@ v1.0
 
 # TCDD Bilet Kontrol
 
-- Chrome driver indirme https://chromedriver.storage.googleapis.com/index.html
-
 - Uygulama TCDD sitesine özel tasarlanmıştır.
 
 - Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır
 
-### Paket Kurulumu
+- Bilet bulunursa telegram uzerinden mesaj gonderebilmektedir.
 
-`$ pip install -r requirements.txt`
+- Bilet bulunursa sesli uyari ve popup uyarisinda bulunabilmektedir.
 
-### Çalıştırılabilir .exe oluşturma
-
-```sh
-$ pyinstaller --onefile --noconsole --icon=icon.ico -F main.py
-```
-
-Ayrıca linkten: https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/tcddBiletYerKontrol_v1.5.zip
-
-exe sürümünü indirebilirsiniz.
 
 ### Kullanımı
 
 ```sh
 $ python main.py
+```
+ya da .exe dosyasini calistirabilirsiniz.
+
+Buradan indirebilirsiniz: [tcddBiletYerKontrol_v1.7.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip)
+
+
+### Çalıştırılabilir .exe oluşturma
+
+Windows ya da Linux ortaminda su komutu cagirabilirsiniz:
+
+```sh
+$ pyinstaller --onefile --noconsole --icon=icon.ico
 ```

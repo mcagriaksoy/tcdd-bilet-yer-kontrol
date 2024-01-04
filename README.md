@@ -12,6 +12,13 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="forks - tcdd-bilet-yer-kontrol"></a>
 
 ## Versions
+v1.7
+
+- Windows destegi genisletildi!
+- Calistirilabilir icerik (.exe) Eklendi!
+- Telegram mesaj botu destegi eklendi. Artik bilet bulundugunda telegram uzerinden telefonuna mesaj gonderilebilecek!
+- Sesli uyari butonu eklendi.
+- Kod optimizasyonu yapildi. Uygulama artik daha hizli calisiyor!
 
 v1.6
 

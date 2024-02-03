@@ -12,9 +12,20 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="forks - tcdd-bilet-yer-kontrol"></a>
 
 ## Indir
-[![Download - v1.7](https://img.shields.io/static/v1?label=Download&message=v1.7&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip)
 
-## Versions
+[![Download - v2.0](https://img.shields.io/static/v1?label=Download&message=v2.0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)
+
+## Versionlar
+
+v2.0
+
+- Bilet bulunca ortaya cikan bir hata giderildi.
+- Bilet arama algoritmasi optimize edildi.
+- Koltuk sayisi hesaplama algoritmasi bastan tasarlandi.
+- Ses kutuphanesi duzenlendi. Artik her denemede bir uyari sesi cikiyor.
+- Bilet bulununca ortaya cikan ses calamama sorunu cozuldu.
+- Eksik olan tum sehirler eklendi. 100+ durak eklendi.
+
 v1.7
 
 - Windows destegi genisletildi!
@@ -84,21 +95,12 @@ v1.0
 
 - Bilet bulunursa sesli uyari ve popup uyarisinda bulunabilmektedir.
 
-
 ### Kullanımı
 
 ```sh
 $ python main.py
 ```
+
 ya da .exe dosyasini calistirabilirsiniz.
 
-Buradan indirebilirsiniz: [tcddBiletYerKontrol_v1.7.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v1.7/TCDD.Bilet.Bulma.Botu.v1.7.zip)
-
-
-### Çalıştırılabilir .exe oluşturma
-
-Windows ya da Linux ortaminda su komutu cagirabilirsiniz:
-
-```sh
-$ pyinstaller --onefile --noconsole --icon=icon.ico
-```
+Buradan indirebilirsiniz: [tcddBiletYerKontrol_v2.0.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)

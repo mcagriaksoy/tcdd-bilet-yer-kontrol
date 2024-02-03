@@ -3,7 +3,7 @@
 Base version @author: Birol Emekli, https://github.com/bymcs
 Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
-
+import os
 import datetime
 import sys
 from datetime import date
@@ -21,11 +21,8 @@ import error_codes as ErrCodes
 import PySimpleGUI as sg
 import Rota
 from selenium import webdriver
-
-if sys.platform == "win32":
-    import winsound
-else:
-    import os
+import pygame
+import Sehirler
 
 
 def main():
@@ -59,34 +56,35 @@ def main():
         ''' Sayfada yer var mı yok mu kontrol eder.'''
         response = Control.Control(driver, time).sayfa_kontrol()
         if response == ErrCodes.BASARILI:
-            sg.Popup('Hey Orada mısın? Biletin bulundu. Satın alabilirsin',
-                     keep_on_top=True,
-                     button_type=5)
-
             # Ses cal!
             if ses:
-                if sys.platform == "win32":
-                    winsound.Beep(440, 20000)
-                else:
-                    os.system("beep -f 440 -l 20000")
+                pygame.mixer.music.load(
+                    os.path.abspath("sound/notification.mp3"))
+                pygame.mixer.music.play()
+                while pygame.mixer.music.get_busy():
+                    pygame.time.Clock().tick(10)
 
             # Telegram mesaji gonder!
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
 
-            # Chrome'u kapat!
-            kill_chrome()
-            return
+            sg.Popup('Hey Orada mısın? Biletin bulundu. Satın alabilirsin',
+                     keep_on_top=True,
+                     button_type=5)
 
         elif response == ErrCodes.TEKRAR_DENE:
             print("\n" + str(delay_time) +
                   " Dakika icerisinde tekrar denenecek...")
+            pygame.mixer.music.load(
+                os.path.abspath("sound/beep.mp3"))
+            pygame.mixer.music.play()
 
         else:
             window['Aramaya Başla'].update(disabled=False)
             window['Durdur!'].update(disabled=True)
-            kill_chrome()
-            return
+
+        # Chrome'u kapat!
+        kill_chrome()
 
     # GUI Ayarlari
     font = ('Verdana', 10)
@@ -100,12 +98,12 @@ def main():
     layout = [
         [[sg.Column([[sg.Text('by Mehmet Cagri Aksoy 2022-2024')]],
                     justification='center')]],
-        [sg.Text('Nereden :', size=(7, 1)), sg.Combo(['İstanbul(Söğütlüçeşme)', 'İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)',
-                                                      'Gebze', 'Bilecik YHT', 'Eskişehir', 'Ankara Gar', 'Konya', 'Kars', 'Erzurum'], default_value='İstanbul(Söğütlüçeşme)', key='nereden')],
-        [sg.Text('Nereye :', size=(7, 1)), sg.Combo(['İstanbul(Söğütlüçeşme)', 'İstanbul(Bakırköy)', 'İstanbul(Halkalı)', 'İstanbul(Pendik)',
-                                                    'Gebze', 'Bilecik YHT', 'Eskişehir', 'Ankara Gar', 'Konya', 'Kars', 'Erzurum'], default_value='Ankara Gar', key='nereye')],
+        [sg.Text('Nereden :', size=(7, 1)), sg.Combo(Sehirler.sehir_listesi,
+                                                     default_value='İstanbul(Söğütlüçeşme)', key='nereden')],
+        [sg.Text('Nereye :', size=(7, 1)), sg.Combo(
+            Sehirler.sehir_listesi, default_value='Ankara Gar', key='nereye')],
         [sg.CalendarButton('Takvim',  target='tarih', format='%d.%m.%Y', default_date_m_d_y=(
-            12, 12, 2023)), sg.Input(key='tarih', size=(20, 1), default_text=currentDate)],
+            2, 6, 2024)), sg.Input(key='tarih', size=(20, 1), default_text=currentDate)],
         [sg.Text('Saat :', size=(7, 1)), sg.InputText(
             default_text=currentTime, size=(14, 5), key='saat')],
         [sg.Text('Arama Sıklığını seçiniz: (dakikada bir)')],
@@ -132,7 +130,7 @@ def main():
     window = sg.Window('TCDD Bilet Arama Botu',
                        layout,
                        icon=r'./icon.ico',
-                       size=(325, 560),
+                       size=(320, 565),
                        resizable=False,
                        font=font,
                        element_justification='l').Finalize()
@@ -182,8 +180,12 @@ def main():
             bot_token = values['bot_token']
             chat_id = values['chat_id']
             ses = values['ses']
+            print("Arama başladı. Lütfen bekleyin...")
             t1 = Thread(target=thread1, args=(
                 delay_time, telegram_msg, bot_token, chat_id, ses))
+            pygame.mixer.init()
+            pygame.mixer.music.load(os.path.abspath("sound/beep.mp3"))
+            pygame.mixer.music.play()
             t1.start()
 
 

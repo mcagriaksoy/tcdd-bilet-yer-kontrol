@@ -16,6 +16,8 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 [![Download - v2.0](https://img.shields.io/static/v1?label=Download&message=v2.0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)
 
 ## Versionlar
+v2.1
+- Eksik olan Eskisehir ili eklendi!
 
 v2.0
 

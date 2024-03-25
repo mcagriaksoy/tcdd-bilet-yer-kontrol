@@ -4,23 +4,22 @@ Base version @author: Birol Emekli, https://github.com/bymcs
 Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
-import os
-import datetime
-import sys
-from datetime import date
-from threading import Thread
+from os import path, system
+from sys import platform
+from datetime import date, datetime
 from time import sleep
+from threading import Thread
+from pygame import mixer
+from pygame import time as pyt
 
-# import TelegramMsg
 import Control
 import DriverGet
 import DriverSetting
+import Sehirler
+import Rota
+
 import error_codes as ErrCodes
 import PySimpleGUI as sg
-import Rota
-from pygame import mixer
-from pygame import time
-import Sehirler
 
 
 def main():
@@ -43,10 +42,10 @@ def main():
 
     def kill_chrome():
         """Chrome'u kapatır."""
-        if sys.platform == "win32":
-            os.system("taskkill /im chrome.exe /f")
+        if platform == "win32":
+            system("taskkill /im chrome.exe /f")
         else:
-            os.system("pkill chrome")
+            system("pkill chrome")
 
     def control(driver, time, delay_time, telegram_msg, bot_token, chat_id, ses):
         """Sayfada yer var mı yok mu kontrol eder."""
@@ -54,10 +53,10 @@ def main():
         if response == ErrCodes.BASARILI:
             # Ses cal!
             if ses:
-                mixer.music.load(os.path.abspath("sound/notification.mp3"))
+                mixer.music.load(path.abspath("sound/notification.mp3"))
                 mixer.music.play()
                 while mixer.music.get_busy():
-                    time.Clock().tick(10)
+                    pyt.Clock().tick(10)
             """
             # Telegram mesaji gonder!
             if telegram_msg:
@@ -71,7 +70,7 @@ def main():
             """
         elif response == ErrCodes.TEKRAR_DENE:
             print("\n" + str(delay_time) + " Dakika icerisinde tekrar denenecek...")
-            mixer.music.load(os.path.abspath("sound/beep.mp3"))
+            mixer.music.load(path.abspath("sound/beep.mp3"))
             mixer.music.play()
 
         else:
@@ -87,7 +86,7 @@ def main():
     today = date.today()
     currentDate = today.strftime("%d.%m.%Y")
 
-    now = datetime.datetime.now()
+    now = datetime.now()
     currentTime = now.strftime("%H:%M")
 
     layout = [
@@ -116,7 +115,7 @@ def main():
                 "Takvim",
                 target="tarih",
                 format="%d.%m.%Y",
-                default_date_m_d_y=(2, 6, 2024),
+                default_date_m_d_y=(3, 26, 2024),
             ),
             sg.Input(key="tarih", size=(20, 1), default_text=currentDate),
         ],
@@ -216,7 +215,7 @@ def main():
                 target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses)
             )
             mixer.init()
-            mixer.music.load(os.path.abspath("sound/beep.mp3"))
+            mixer.music.load(path.abspath("sound/beep.mp3"))
             mixer.music.play()
             t1.start()
 

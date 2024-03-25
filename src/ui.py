@@ -61,13 +61,13 @@ def main():
             # Telegram mesaji gonder!
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
-
+            """
             sg.Popup(
                 "Hey Orada mısın? Biletin bulundu. Satın alabilirsin",
                 keep_on_top=True,
                 button_type=5,
             )
-            """
+
         elif response == ErrCodes.TEKRAR_DENE:
             print("\n" + str(delay_time) + " Dakika icerisinde tekrar denenecek...")
             mixer.music.load(path.abspath("sound/beep.mp3"))
@@ -78,7 +78,7 @@ def main():
             window["Durdur!"].update(disabled=True)
 
         # Chrome'u kapat!
-        kill_chrome()
+        # kill_chrome()
 
     # GUI Ayarlari
     font = ("Verdana", 10)
@@ -89,6 +89,11 @@ def main():
     now = datetime.now()
     currentTime = now.strftime("%H:%M")
 
+    sg.popup(
+        "Selam :)",
+        "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
+        keep_on_top=True,
+    )
     layout = [
         [
             [

@@ -16,6 +16,11 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 [![Download - v2.0](https://img.shields.io/static/v1?label=Download&message=v2.0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)
 
 ## Versionlar
+v2.2
+- [25.03.2024] Hata cikaran telegram modulu suan icin kaldirildi.
+- Daha kucuk executable icin pygame kutuphanesi kucultuldu.
+- Icon kaldirildi, iconu avast virus olarak tanimliyordu. :D
+
 v2.1
 - Eksik olan Eskisehir ili eklendi!
 

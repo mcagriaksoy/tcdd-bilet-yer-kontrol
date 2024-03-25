@@ -1,7 +1,4 @@
-# python3 -m  pipreqs.pipreqs --force ./
-
 pygame==2.5.2
 PySimpleGUI==4.60.5
-python-telegram-bot==20.7
-selenium==4.17.2
+selenium==4.18.1
 webdriver_manager==4.0.1

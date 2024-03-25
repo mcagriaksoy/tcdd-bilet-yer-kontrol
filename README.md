@@ -17,6 +17,10 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 
 ## Versionlar
 v2.2.1
+Chrome kaldirildi. Artik Edge ile tarama yapiliyor.
+Seleniumdan kaynaklanan bir hata sebebiyle .exe surumu bozuldu. Gecici sureyle GUI arkasinda konsol cikacak.
+
+v2.2
 - [25.03.2024] Hata cikaran telegram modulu suan icin kaldirildi.
 - Daha kucuk executable icin pygame kutuphanesi kucultuldu.
 - Icon kaldirildi, iconu avast virus olarak tanimliyordu. :D

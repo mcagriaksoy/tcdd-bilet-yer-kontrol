@@ -22,6 +22,7 @@ import Rota
 import error_codes as ErrCodes
 import PySimpleGUI as sg
 
+g_isStopped = False
 
 def main():
     def driver_setting():
@@ -35,7 +36,7 @@ def main():
     def route(driver, first_location, last_location, date):
         """ Rota bilgilerini alır ve gerekli yerlere yazar.""" ""
         isError = Rota.Rota(driver, first_location, last_location, date).dataInput()
-        if isError == -1:
+        if isError == -1 or g_isStopped == True:
             window["Aramaya Başla"].update(disabled=False)
             window["Durdur!"].update(disabled=True)
             driver.quit()
@@ -43,10 +44,10 @@ def main():
 
     def kill_chrome():
         """Chrome'u kapatır."""
-        if platform == "win32":
-            system("taskkill /im chrome.exe /f")
+        if platform.system() == "Windows":
+            system("taskkill /im chromium.exe /f")
         else:
-            system("pkill chrome")
+            system("pkill chromium")
 
     def control(driver, time, delay_time, telegram_msg, bot_token, chat_id, ses):
         """Sayfada yer var mı yok mu kontrol eder."""
@@ -174,6 +175,9 @@ def main():
 
     def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
         """Arama dongusu!"""
+        global g_isStopped
+        g_isStopped = False
+
         while True:
             """ Arama dongusu!"""
             driver = driver_setting()
@@ -185,9 +189,6 @@ def main():
     def thread2():
         """Durdurma dongusu!"""
         window["log"].update(value="")
-        # Control.Control(data, None).kill_driver()
-        kill_chrome()
-        print("Web Surucusu Kapandi!")
 
     while True:
         event, values = window.read()
@@ -200,6 +201,8 @@ def main():
         if event == "Durdur!":
             window["Aramaya Başla"].update(disabled=False)
             window["Durdur!"].update(disabled=True)
+            global g_isStopped
+            g_isStopped = True
             t2 = Thread(target=thread2)
             t2.start()
 

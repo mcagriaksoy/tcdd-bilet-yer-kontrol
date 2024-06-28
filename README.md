@@ -13,9 +13,18 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 
 ## Indir
 
-[![Download - v2.2.1](https://img.shields.io/static/v1?label=Download&message=v2.2.1&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.2.1/TCDD.Bilet.Bulma.Botu.v2.2.1.zip)
+[![Download - v2.3](https://img.shields.io/static/v1?label=Download&message=v2.2.1&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.2.1/TCDD.Bilet.Bulma.Botu.v2.2.1.zip)
 
 ## Versionlar
+v2.3
+Bir Edge webdriver sorunu cozuldu.
+Webdriver artik sayfanin yuklenmesini daha cok bekliyor.
+Koltuk sayisini bulan regex algoritmasi yeniden yazildi.
+UI tarafi:
+    - Artik kullanici saati 17,30 17.30 veya 17:30 cinsinde girebiliyor.
+    - Ayni sekilde tarihler -, ., / cinsinden de yazilabiliyor.
+    - Hata durumlari icin mekanizma eklendi.
+
 v2.2.1
 Chrome kaldirildi. Artik Edge ile tarama yapiliyor.
 Seleniumdan kaynaklanan bir hata sebebiyle .exe surumu bozuldu. Gecici sureyle GUI arkasinda konsol cikacak.

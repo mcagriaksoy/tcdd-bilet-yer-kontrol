@@ -20,9 +20,9 @@ v2.3
 
 Bircok Edge webdriver sorunu cozuldu.
     - webdriver kapanamama sorunu cozuldu.
-Webdriver artik sayfanin yuklenmesini daha cok bekliyor.
-Koltuk sayisini bulan regex algoritmasi yeniden yazildi.
-UI tarafi:
+- Webdriver artik sayfanin yuklenmesini daha cok bekliyor.
+- Koltuk sayisini bulan regex algoritmasi yeniden yazildi.
+ UI tarafi:
     - Artik kullanici saati 17,30 17.30 veya 17:30 cinsinde girebiliyor.
     - Ayni sekilde tarihler -, ., / cinsinden de yazilabiliyor.
     - Hata durumlari icin mekanizma eklendi.

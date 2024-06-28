@@ -17,7 +17,9 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 
 ## Versionlar
 v2.3
-Bir Edge webdriver sorunu cozuldu.
+
+Bircok Edge webdriver sorunu cozuldu.
+    - webdriver kapanamama sorunu cozuldu.
 Webdriver artik sayfanin yuklenmesini daha cok bekliyor.
 Koltuk sayisini bulan regex algoritmasi yeniden yazildi.
 UI tarafi:
@@ -26,6 +28,7 @@ UI tarafi:
     - Hata durumlari icin mekanizma eklendi.
 
 v2.2.1
+
 Chrome kaldirildi. Artik Edge ile tarama yapiliyor.
 Seleniumdan kaynaklanan bir hata sebebiyle .exe surumu bozuldu. Gecici sureyle GUI arkasinda konsol cikacak.
 

@@ -41,23 +41,25 @@ class Control:
                     sleep(1)
                     xpath = ('//*[@id="mainTabView:gidisSeferTablosu_data"]/tr['
                              f'{row}]/td[1]/span')
-                    aranan_element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(
+                    aranan_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                         (By.XPATH, xpath)))
                     aranan = aranan_element.text
                     sleep(1)
                     if self.zaman == aranan:
-                        message_element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(
+                        message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                             (By.XPATH, f'//*[@id="mainTabView:gidisSeferTablosu:{row-1}:j_idt109:0:somVagonTipiGidis1_label"]'.format(row))))
                         message = message_element.text
-                        match = re.search(r'\((\d+) \)', message)
+                        
+                        # Search pattern of ) (
+                        match = re.search(r'\) \(.', message)
                         if match is None:
                             sys.stdout.write(
                                 "\nSayfa yüklenirken hata oluştu...")
                             return ErrCodes.TEKRAR_DENE
-                        koltuk_sayisi = int(match.group(1))
+                        koltuk_sayisi = int(match.group()[3])
                         if koltuk_sayisi > 2:
                             sys.stdout.write(
-                                f"\nBoş koltuk sayısı: {koltuk_sayisi}")
+                                f"\nTrende yeteri kadar bos ver mevcut!")
                             return ErrCodes.BASARILI
                         elif koltuk_sayisi == 2 or koltuk_sayisi == 1:
                             sys.stdout.write(

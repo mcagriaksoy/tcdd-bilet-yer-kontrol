@@ -5,12 +5,13 @@ Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
 from os import path, system
-from sys import platform
+import platform
 from datetime import date, datetime
 from time import sleep
 from threading import Thread
-from pygame import mixer
-from pygame import time as pyt
+
+if platform.system() == "Windows":
+    import winsound
 
 import Control
 import DriverGet
@@ -53,25 +54,24 @@ def main():
         if response == ErrCodes.BASARILI:
             # Ses cal!
             if ses:
-                mixer.music.load(path.abspath("sound/notification.mp3"))
-                mixer.music.play()
-                while mixer.music.get_busy():
-                    pyt.Clock().tick(10)
+                for i in range(5):
+                    if platform.system() == "Windows":
+                        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
+                    elif platform.system() == "Darwin" or platform.system() == "Linux":
+                        os.system('play -n synth 0.1 sine 660')
             """
             # Telegram mesaji gonder!
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
             """
             sg.Popup(
-                "Hey Orada mısın? Biletin bulundu. Satın alabilirsin",
+                "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️",
                 keep_on_top=True,
                 button_type=5,
             )
 
         elif response == ErrCodes.TEKRAR_DENE:
             print("\n" + str(delay_time) + " Dakika icerisinde tekrar denenecek...")
-            mixer.music.load(path.abspath("sound/beep.mp3"))
-            mixer.music.play()
 
         else:
             window["Aramaya Başla"].update(disabled=False)
@@ -90,7 +90,7 @@ def main():
     currentTime = now.strftime("%H:%M")
 
     sg.popup(
-        "Selam :)",
+        "💖 Selam, Hos geldin 💖",
         "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
         keep_on_top=True,
     )
@@ -204,26 +204,46 @@ def main():
             t2.start()
 
         if event == "Aramaya Başla":
-            window["Aramaya Başla"].update(disabled=True)
-            window["Durdur!"].update(disabled=False)
             nereden = values["nereden"]
             nereye = values["nereye"]
             tarih = values["tarih"]
             saat = values["saat"]
+            
+            if saat == "":
+                sg.popup("Lütfen saat bilgisini giriniz!")
+                continue
+            elif tarih == "":
+                sg.popup("Lütfen tarih bilgisini giriniz!")
+                continue
+            elif nereden == nereye:
+                sg.popup("Nereden ve Nereye aynı olamaz!")
+                continue
+
+            if "/" in tarih:
+                tarih = tarih.replace("/", ".")
+            elif "-" in tarih:
+                tarih = tarih.replace("-", ".")
+
+            # If saat has , . replace with :
+            if "." in saat:
+                saat = saat.replace(".", ":")
+            elif "," in saat:
+                saat = saat.replace(",", ":")
+
             delay_time = values["delay_time"]
             telegram_msg = values["telegram_msg"]
             bot_token = values["bot_token"]
             chat_id = values["chat_id"]
             ses = values["ses"]
+
+            window["Aramaya Başla"].update(disabled=True)
+            window["Durdur!"].update(disabled=False)
+
             print("Arama başladı. Lütfen bekleyin...")
             t1 = Thread(
                 target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses)
             )
-            mixer.init()
-            mixer.music.load(path.abspath("sound/beep.mp3"))
-            mixer.music.play()
             t1.start()
-
 
 def __main__():
     main()

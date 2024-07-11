@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Base version @author: Birol Emekli, https://github.com/bymcs
-Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
+Enhanced (Forked) version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
 from os import path, system
@@ -10,6 +10,9 @@ from datetime import date, datetime
 from time import sleep
 from threading import Thread
 
+import error_codes as ErrCodes
+import PySimpleGUI as sg
+from webbrowser import open as wbopen
 if platform.system() == "Windows":
     import winsound
 
@@ -19,10 +22,10 @@ import DriverSetting
 import Sehirler
 import Rota
 
-import error_codes as ErrCodes
-import PySimpleGUI as sg
-
 g_isStopped = False
+
+FULL_SIZE = (310, 600)
+HALF_SIZE = (310, 507)
 
 def main():
     def driver_setting():
@@ -86,6 +89,10 @@ def main():
     sg.theme("SystemDefault1")
     today = date.today()
     currentDate = today.strftime("%d.%m.%Y")
+    # extract day, month, year
+    day = currentDate.split(".")[0]
+    month = currentDate.split(".")[1]
+    year = currentDate.split(".")[2]
 
     now = datetime.now()
     currentTime = now.strftime("%H:%M")
@@ -94,7 +101,13 @@ def main():
         "💖 Selam, Hos geldin 💖",
         "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
         keep_on_top=True,
+        auto_close=True,
+        auto_close_duration=15,
+        title = "",
+        non_blocking=True
+    
     )
+
     layout = [
         [
             [
@@ -103,6 +116,10 @@ def main():
                     justification="center",
                 )
             ]
+        ],
+        
+        [sg.Button("TCDD Sitesine git!", size=(20, 1)),
+         sg.Button("Yardım", size=(20, 1)),
         ],
         [
             sg.Text("Nereden :", size=(7, 1)),
@@ -121,7 +138,7 @@ def main():
                 "Takvim",
                 target="tarih",
                 format="%d.%m.%Y",
-                default_date_m_d_y=(3, 26, 2024),
+                default_date_m_d_y=(day, month, year),
             ),
             sg.Input(key="tarih", size=(20, 1), default_text=currentDate),
         ],
@@ -132,10 +149,10 @@ def main():
         [sg.Text("Arama Sıklığını seçiniz: (dakikada bir)")],
         [
             sg.Slider(
-                range=(1, 10),
+                range=(1, 30),
                 key="delay_time",
                 orientation="h",
-                size=(35, 25),
+                size=(35, 20),
                 default_value=1,
                 enable_events=True,
             )
@@ -154,7 +171,7 @@ def main():
         [sg.InputText(key="chat_id", size=(35, 5))],
         [sg.Text("Ses Ayarlari: (Opsiyonel)")],
         [sg.Checkbox("Bilet bulunursa ses çal!", default=True, key="ses")],
-        [sg.Button("Aramaya Başla"), sg.Button("Durdur!"), sg.Button("Kapat!")],
+        [sg.Button("Aramaya Başla"), sg.Button("Durdur!"), sg.Button("Kapat!"), sg.Button("↓")],
         [
             sg.Multiline(
                 "", size=(32, 8), key="log", autoscroll=True, reroute_stdout=True
@@ -166,11 +183,12 @@ def main():
         "TCDD Bilet Arama Botu",
         layout,
         icon=r"./icon.ico",
-        size=(320, 565),
+        size=FULL_SIZE,
         resizable=False,
         font=font,
         element_justification="l",
     ).Finalize()
+
     window["Durdur!"].update(disabled=True)
 
     def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
@@ -194,6 +212,14 @@ def main():
         event, values = window.read()
         # driver = None
 
+        if event == "↓":
+            if window.size == FULL_SIZE:
+                window["↓"].update("↑")
+                window.size = HALF_SIZE
+            else:
+                window["↓"].update("↓")
+                window.size = FULL_SIZE
+
         if event == sg.WIN_CLOSED or event == "Kapat!":
             window.close()
             break
@@ -205,6 +231,18 @@ def main():
             g_isStopped = True
             t2 = Thread(target=thread2)
             t2.start()
+
+        if event == "Yardım":
+            #print url
+
+            if(sg.popup_yes_no("Yardım sayfasına gitmek ister misiniz?", keep_on_top=True)) == "Yes":
+                wbopen("https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol")
+
+        
+        if event == "TCDD Sitesine git!":
+            sg.popup_no_buttons("TCDD Bilet Satış Sitesine yönlendiriliyorsunuz. Lütfen bekleyin...",
+             auto_close=True, auto_close_duration=1, no_titlebar=True)
+            wbopen("https://ebilet.tcddtasimacilik.gov.tr")
 
         if event == "Aramaya Başla":
             nereden = values["nereden"]

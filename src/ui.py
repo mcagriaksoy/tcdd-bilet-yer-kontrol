@@ -68,6 +68,8 @@ def main():
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
             """
+
+            # Make popup always on top
             sg.Popup(
                 "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️",
                 keep_on_top=True,
@@ -138,7 +140,7 @@ def main():
                 "Takvim",
                 target="tarih",
                 format="%d.%m.%Y",
-                default_date_m_d_y=(day, month, year),
+                default_date_m_d_y=(int(month), int(day), int(year)),
             ),
             sg.Input(key="tarih", size=(20, 1), default_text=currentDate),
         ],

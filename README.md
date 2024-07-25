@@ -13,9 +13,18 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 
 ## Indir
 
-[![Download - v2.3](https://img.shields.io/static/v1?label=Download&message=v2.3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.3/TCDD.Bilet.Bulma.Botu.v2.3.zip)
+[![Download - v2.4](https://img.shields.io/static/v1?label=Download&message=v2.4&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.4/TCDD.Bilet.Bulma.Botu.v2.4.zip)
+
 
 ## Versionlar
+v2.4
+
+- Takvimden kaynaklanan bir sorun cozuldu.
+
+Yeni UI:
+
+![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_2.jpg)
+
 v2.3
 
 Bircok Edge webdriver sorunu cozuldu.

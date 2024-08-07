@@ -1,4 +1,18 @@
-TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda kalmadan, ayarlayacaginiz periyotlarla websitesinden bilet yer durumunu ogrenebilmeniz saglanmistir.
+# TCDD Bilet Kontrol Etme Programi
+TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda kalmadan, ayarlayacaginiz periyotlarla websitesinden bilet yer durumunu ogrenebilmeniz saglanmistir. Uygulama kullanıcıların bilet arama işlemlerini kolaylaştırmak ve otomatize etmek amacıyla tasarlanmış bir uygulamadır. Bu uygulama, Türkiye Cumhuriyeti Devlet Demiryolları (TCDD) tarafından sunulan biletlerin doğruluğunu ve geçerliliğini hızlı ve güvenli bir şekilde kontrol etmeyi sağlar.
+
+## Özellikler:
+
+Kolay Bilet Arama: Verilen saat, tarih, kalkis ve varis bilgileri ile.
+
+Otomatik Kontrol: Bilet bilgilerini otomatik olarak kontrol etme ve doğrulama.
+
+Kullanıcı Dostu Arayüz: Basit ve anlaşılır tasarım ile kolay kullanım. Bilet bulunmasi, veya biletin bosa cikmasi durumunda, sesli ve gorsel uyari.
+
+Hızlı İşlem: Bilet bilgilerini anında kontrol etme imkanı. 10 Saniye icerisinde bilet yer durumu kontrolu.
+
+Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel bilginiz tutulmaz, bilgiler tamamen TCDD sitesine aktarilir.
+
 
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol" title="Go to GitHub repo"><img src="https://img.shields.io/static/v1?label=mcagriaksoy&message=tcdd-bilet-yer-kontrol&color=blue&logo=github" alt="mcagriaksoy - tcdd-bilet-yer-kontrol"></a>
 <a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/"><img src="https://img.shields.io/github/tag/mcagriaksoy/tcdd-bilet-yer-kontrol?include_prereleases=&sort=semver&color=blue" alt="GitHub tag"></a>

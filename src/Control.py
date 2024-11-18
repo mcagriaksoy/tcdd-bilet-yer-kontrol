@@ -5,8 +5,7 @@ Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 import sys
 from time import sleep
-import re
-
+from re import search
 import error_codes as ErrCodes
 from selenium.common.exceptions import (NoSuchElementException,
                                         TimeoutException,
@@ -14,7 +13,6 @@ from selenium.common.exceptions import (NoSuchElementException,
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
 
 class Control:
     ''' Class: Sayfada yer var mı yok mu kontrol eder.'''
@@ -35,7 +33,7 @@ class Control:
         try:
             element = WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu_data")))
-            if element != "":
+            if element:
                 sys.stdout.write("\nAranan  saat : " + self.zaman + "\n")
                 for row in range(1, 15):
                     sleep(1)
@@ -51,7 +49,7 @@ class Control:
                         message = message_element.text
                         
                         # Search pattern of ) (
-                        match = re.search(r'\) \(.', message)
+                        match = search(r'\) \(.', message)
                         if match is None:
                             sys.stdout.write(
                                 "\nSayfa yüklenirken hata oluştu...")
@@ -78,8 +76,12 @@ class Control:
                 message = ""
                 self.kill_driver()
                 return ErrCodes.TEKRAR_DENE
-        except (TimeoutException, NoSuchElementException):
-            message = ""
+        except TimeoutException:
+            sys.stdout.write("\nZaman aşımına uğradı...")
+            self.kill_driver()
+            return ErrCodes.TEKRAR_DENE
+        except NoSuchElementException:
+            sys.stdout.write("\nAranan saat ya da sefer bulunamadı...")
             self.kill_driver()
             return ErrCodes.TEKRAR_DENE
         except UnexpectedAlertPresentException as ex1:

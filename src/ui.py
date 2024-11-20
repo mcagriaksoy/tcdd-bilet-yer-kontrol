@@ -21,6 +21,7 @@ import DriverGet
 import DriverSetting
 import Sehirler
 import Rota
+import TelegramMsg
 
 g_isStopped = False
 
@@ -37,13 +38,14 @@ def main():
         DriverGet.DriverGet(drivers).driver_get()
 
     def route(driver, first_location, last_location, date):
-        """ Rota bilgilerini alır ve gerekli yerlere yazar.""" ""
+        """ Rota bilgilerini alır ve gerekli yerlere yazar."""
+        global g_isStopped
         isError = Rota.Rota(driver, first_location, last_location, date).dataInput()
         if isError == -1 or g_isStopped == True:
             window["Aramaya Başla"].update(disabled=False)
             window["Durdur!"].update(disabled=True)
             driver.quit()
-            exit()
+            return
 
     def kill_chrome():
         """Chrome'u kapatır."""
@@ -63,11 +65,10 @@ def main():
                         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
                     elif platform.system() == "Darwin" or platform.system() == "Linux":
                         os.system('play -n synth 0.1 sine 660')
-            """
+
             # Telegram mesaji gonder!
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
-            """
 
             # Make popup always on top
             sg.Popup(
@@ -129,11 +130,18 @@ def main():
                 Sehirler.sehir_listesi,
                 default_value="İstanbul(Söğütlüçeşme)",
                 key="nereden",
+                enable_events=True,
+                #readonly=True
             ),
         ],
         [
             sg.Text("Nereye :", size=(7, 1)),
-            sg.Combo(Sehirler.sehir_listesi, default_value="Ankara Gar", key="nereye"),
+            sg.Combo(
+             Sehirler.sehir_listesi,
+             default_value="Ankara Gar",
+             key="nereye",
+             enable_events=True,
+            ),
         ],
         [
             sg.CalendarButton(
@@ -192,6 +200,8 @@ def main():
     ).Finalize()
 
     window["Durdur!"].update(disabled=True)
+    window['nereden'].bind('<KeyRelease>', 'KEY')
+    window['nereye'].bind('<KeyRelease>', 'KEY')
 
     def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
         """Arama dongusu!"""
@@ -245,6 +255,21 @@ def main():
             sg.popup_no_buttons("TCDD Bilet Satış Sitesine yönlendiriliyorsunuz. Lütfen bekleyin...",
              auto_close=True, auto_close_duration=1, no_titlebar=True)
             wbopen("https://ebilet.tcddtasimacilik.gov.tr")
+        
+        if event == "neredenKEY":
+            #Get pressed Key from keyboard
+            current_input = values["nereden"]
+            # Filter the items based on the current input
+            filtered_items = [item for item in Sehirler.sehir_listesi if item.lower().startswith(current_input.lower())]
+            # Update the combo box with the filtered items
+            window["nereden"].update(values=filtered_items, value=current_input)
+        elif event == "nereyeKEY":
+            #Get pressed Key from keyboard
+            current_input = values["nereye"]
+            # Filter the items based on the current input
+            filtered_items = [item for item in Sehirler.sehir_listesi if item.lower().startswith(current_input.lower())]
+            # Update the combo box with the filtered items
+            window["nereye"].update(values=filtered_items, value=current_input)
 
         if event == "Aramaya Başla":
             nereden = values["nereden"]
@@ -274,9 +299,19 @@ def main():
                 saat = saat.replace(",", ":")
 
             delay_time = values["delay_time"]
+
             telegram_msg = values["telegram_msg"]
+            if telegram_msg:
+                if values["bot_token"] == "" or values["chat_id"] == "":
+                    sg.popup("Telegram bot token ve chat id bilgilerini giriniz!")
+                    continue
+
             bot_token = values["bot_token"]
-            chat_id = values["chat_id"]
+            if (bot_token != "") and not TelegramMsg.TelegramMsg().check_telegram_bot_status(bot_token):
+                sg.popup("Telegram bot token bilgisi hatali! kontrol ediniz!")
+                continue
+
+            chat_id = values["chat_id"]        
             ses = values["ses"]
 
             window["Aramaya Başla"].update(disabled=True)

@@ -9,17 +9,22 @@ from selenium.webdriver.edge.options import Options as EdgeOptions
 
 class DriverSetting:
     """Driver'ı ayarlar."""
-    driver = None
+    def __init__(self):
+        self.driver = None
 
     def driver_init(self):
-        options = EdgeOptions()
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        options.add_experimental_option("detach", True)
-        self.driver = Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=options)
-        return self.driver
+        try:
+            options = EdgeOptions()
+            options.add_experimental_option('excludeSwitches', ['enable-logging'])
+            options.add_experimental_option("detach", True)
+            self.driver = Edge(service=EdgeService(EdgeChromiumDriverManager().install()), options=options)
+            return self.driver
+        except Exception as e:
+            print(f"Driver ayarlarında hata oluştu: {e}")
+            return None
     
     def driver_quit(self):
-        self.driver.quit()
-        self.driver = None
-        return self.driver
+        if self.driver:
+            self.driver.quit()
+            self.driver = None
 

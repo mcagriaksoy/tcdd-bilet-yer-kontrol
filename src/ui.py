@@ -21,6 +21,7 @@ import DriverGet
 import DriverSetting
 import Sehirler
 import Rota
+import TelegramMsg
 
 g_isStopped = False
 
@@ -298,9 +299,19 @@ def main():
                 saat = saat.replace(",", ":")
 
             delay_time = values["delay_time"]
+
             telegram_msg = values["telegram_msg"]
+            if telegram_msg:
+                if values["bot_token"] == "" or values["chat_id"] == "":
+                    sg.popup("Telegram bot token ve chat id bilgilerini giriniz!")
+                    continue
+
             bot_token = values["bot_token"]
-            chat_id = values["chat_id"]
+            if (bot_token != "") and not TelegramMsg.TelegramMsg().check_telegram_bot_status(bot_token):
+                sg.popup("Telegram bot token bilgisi hatali! kontrol ediniz!")
+                continue
+
+            chat_id = values["chat_id"]        
             ses = values["ses"]
 
             window["Aramaya Başla"].update(disabled=True)

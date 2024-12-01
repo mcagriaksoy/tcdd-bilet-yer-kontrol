@@ -79,6 +79,13 @@ def main():
 
         elif response == ErrCodes.TEKRAR_DENE:
             print("\n" + str(delay_time) + " Dakika icerisinde tekrar denenecek...")
+            # Close the driver
+            driver.quit()
+        
+        elif response == ErrCodes.TIMEOUT_HATASI:
+            delay_time = 0
+            # Close the driver
+            driver.quit()
 
         else:
             window["Aramaya Başla"].update(disabled=False)
@@ -128,7 +135,7 @@ def main():
             sg.Text("Nereden :", size=(7, 1)),
             sg.Combo(
                 Sehirler.sehir_listesi,
-                default_value="İstanbul(Söğütlüçeşme)",
+                default_value="Eskişehir",
                 key="nereden",
                 enable_events=True,
                 #readonly=True

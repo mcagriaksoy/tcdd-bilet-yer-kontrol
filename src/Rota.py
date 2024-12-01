@@ -13,6 +13,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
+NEREDEN_BOX = "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[1]/p[4]"
+NEREYE_BOX = "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[2]/p[4]"
+TARIH_BOX = ""
+BUTTON_BOX = "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[3]/p[3]/button"
+
 class Rota:
     """Rota bilgilerini alır ve gerekli yerlere yazar."""
 
@@ -33,14 +38,7 @@ class Rota:
             stdout.write("\nNereden: " + self.first_location)
             sleep(0.2)
 
-            element = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located(
-                    (
-                        By.XPATH,
-                        "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[1]/p[4]",
-                    )
-                )
-            )
+            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, NEREDEN_BOX)))
             ActionChains(self.driver).move_to_element(element).perform()
             element.click()
 
@@ -52,14 +50,7 @@ class Rota:
             stdout.write("\nNereye: " + self.last_location)
             sleep(0.2)
 
-            element = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located(
-                    (
-                        By.XPATH,
-                        "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[1]/p[6]/span/input",
-                    )
-                )
-            )
+            element = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, NEREYE_BOX)))
             ActionChains(self.driver).move_to_element(element).perform()
             element.click()
             sleep(0.2)
@@ -70,16 +61,9 @@ class Rota:
             date.clear()
             date.send_keys(self.date)
             stdout.write("\nTarih: " + self.date)
-            sleep(0.2)
+            sleep(1)
 
-            button = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located(
-                    (
-                        By.XPATH,
-                        "/html/body/div[3]/div[2]/div/div[2]/ul/li[1]/div/form/div[3]/p[3]/button",
-                    )
-                )
-            )
+            button = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, BUTTON_BOX)))
             self.driver.execute_script("arguments[0].click();", button)
 
         except UnexpectedAlertPresentException:

@@ -7,7 +7,6 @@ import ui
 VERSION_DEBUG = False
 VERSION_RELEASE = True
 
-
 def main():
     """ Main function """
 

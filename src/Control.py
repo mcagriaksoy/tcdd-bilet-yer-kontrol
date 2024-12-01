@@ -14,6 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+MAX_TREN_SAYISI = 22
+
 class Control:
     ''' Class: Sayfada yer var mı yok mu kontrol eder.'''
 
@@ -32,18 +34,18 @@ class Control:
         ''' Sayfada yer var mı yok mu kontrol eder.'''
         try:
             element = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu_data")))
+                EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu")))
             if element:
                 sys.stdout.write("\nAranan  saat : " + self.zaman + "\n")
-                for row in range(1, 15):
-                    sleep(1)
-                    xpath = ('//*[@id="mainTabView:gidisSeferTablosu_data"]/tr['
-                             f'{row}]/td[1]/span')
+                for row in range(1, MAX_TREN_SAYISI):
+                    sleep(0.2)
+                    xpath = f'//*[@id="mainTabView:gidisSeferTablosu_data"]/tr[{row}]/td[1]/span'
                     aranan_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                         (By.XPATH, xpath)))
                     aranan = aranan_element.text
-                    sleep(1)
+                    sleep(0.2)
                     if self.zaman == aranan:
+                        sys.stdout.write("\nAranan saat bulundu...")
                         message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                             (By.XPATH, f'//*[@id="mainTabView:gidisSeferTablosu:{row-1}:j_idt109:0:somVagonTipiGidis1_label"]'.format(row))))
                         message = message_element.text
@@ -67,10 +69,11 @@ class Control:
                             sys.stdout.write(
                                 "\nAradığınız seferde hiç boş yer yok...")
                             return ErrCodes.TEKRAR_DENE
-
-                sys.stdout.write("\nSaatinizde hata var...")
+                    #else:
+                        #sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))
                 self.kill_driver()
                 return ErrCodes.SAAT_HATASI
+                    
             else:
                 sys.stdout.write("\nAradığınız seferde boş yer yoktur...")
                 message = ""
@@ -79,13 +82,13 @@ class Control:
         except TimeoutException:
             sys.stdout.write("\nZaman aşımına uğradı...")
             self.kill_driver()
-            return ErrCodes.TEKRAR_DENE
+            return ErrCodes.TIMEOUT_HATASI
         except NoSuchElementException:
             sys.stdout.write("\nAranan saat ya da sefer bulunamadı...")
             self.kill_driver()
             return ErrCodes.TEKRAR_DENE
         except UnexpectedAlertPresentException as ex1:
             sys.stdout.write(
-                f"\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz.\nHata Kodu: {ex1.msg}")
+                f"\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz. İstasyonları doğru girdiğinizden emin olunuz.\n")
             self.kill_driver()
             return ErrCodes.GUZERGAH_HATASI

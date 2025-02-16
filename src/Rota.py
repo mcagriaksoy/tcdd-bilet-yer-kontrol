@@ -81,8 +81,6 @@ class Rota:
                 dynamic_element = WebDriverWait(self.driver, 22).until(
                     EC.element_to_be_clickable((By.XPATH, new_xpath)))
                 dynamic_element.click()
-            stdout.write(self.date)
-
 
 ######################################################################################
             sleep(1)

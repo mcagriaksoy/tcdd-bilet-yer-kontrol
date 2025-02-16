@@ -34,49 +34,67 @@ class Control:
         ''' Sayfada yer var mı yok mu kontrol eder.'''
         try:
             element = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located((By.ID, "mainTabView:gidisSeferTablosu")))
+                EC.visibility_of_element_located((By.XPATH, '//*[@id="seferListScroll"]/div[2]/div/div[1]')))
             if element:
                 sys.stdout.write("\nAranan  saat : " + self.zaman + "\n")
-                for row in range(1, MAX_TREN_SAYISI):
+                for row in range(0, MAX_TREN_SAYISI):
                     sleep(0.2)
-                    xpath = f'//*[@id="mainTabView:gidisSeferTablosu_data"]/tr[{row}]/td[1]/span'
+                    xpath = f'//*[@id="gidis{row}btn"]/div/div[2]/div/div[2]/div[2]/span[1]/time'
                     aranan_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                         (By.XPATH, xpath)))
+                    sys.stdout.write("aaaaa " + aranan_element.text)
                     aranan = aranan_element.text
                     sleep(0.2)
                     if self.zaman == aranan:
                         sys.stdout.write("\nAranan saat bulundu...")
+                        # click xpath above
+                        element = WebDriverWait(self.driver, 50).until(EC.element_to_be_clickable(
+                            (By.XPATH, xpath)))
+                        element.click()
+                        #koltuk_xpath "/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[8]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[2]/button/div/div[2]/div/div/span/text()"
                         message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
-                            (By.XPATH, f'//*[@id="mainTabView:gidisSeferTablosu:{row-1}:j_idt109:0:somVagonTipiGidis1_label"]'.format(row))))
-                        message = message_element.text
+                            (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[2]/button/div/div[2]/div/div/span')))
+                        economy_seat = message_element.text
+
+                        message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
+                            (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/button/div/div[2]/div/div/span')))
+                        business_seat = message_element.text
                         
-                        # Search pattern of ) (
-                        match = search(r'\) \(.', message)
-                        if match is None:
+                        # delete first and last characters
+                        economy_seat = economy_seat[1:-1]
+                        business_seat = business_seat[1:-1]
+
+                        sys.stdout.write(economy_seat)
+                        sys.stdout.write(business_seat)
+
+                        # convert to integer
+                        economy_seat = int(economy_seat)
+                        business_seat = int(business_seat)
+
+                        if economy_seat > 2 or business_seat > 2:
                             sys.stdout.write(
-                                "\nSayfa yüklenirken hata oluştu...")
-                            return ErrCodes.TEKRAR_DENE
-                        koltuk_sayisi = int(match.group()[3])
-                        if koltuk_sayisi > 2:
-                            sys.stdout.write(
-                                f"\nTrende yeteri kadar bos ver mevcut!")
+                                "\nTrende yeteri kadar bos ver mevcut!")
                             return ErrCodes.BASARILI
-                        elif koltuk_sayisi == 2 or koltuk_sayisi == 1:
+                        elif economy_seat == 2 or economy_seat == 1:
                             sys.stdout.write(
-                                f"\nBoş koltuk sayısı: {koltuk_sayisi} Sadece Engelli Bileti Kaldı!")
-                            return ErrCodes.TEKRAR_DENE
-                        elif koltuk_sayisi == 0:
+                                f"\nEKONOMI SINIFINDA Boş koltuk sayısı: {economy_seat} Acele et!!!!!")
+                            return ErrCodes.BASARILI
+                        elif business_seat == 2 or business_seat == 1:
                             sys.stdout.write(
-                                "\nAradığınız seferde hiç boş yer yok...")
+                                f"\nBUSINESS SINIFINDA Boş koltuk sayısı: {business_seat} Acele et!!!!!")
+                            return ErrCodes.BASARILI
+                        else:
+                            sys.stdout.write(
+                                "\nAradığınız seferde suan hiç boş yer yok...")
                             return ErrCodes.TEKRAR_DENE
-                    #else:
-                        #sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))
+                    else:
+                        sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))
                 self.kill_driver()
                 return ErrCodes.SAAT_HATASI
                     
             else:
                 sys.stdout.write("\nAradığınız seferde boş yer yoktur...")
-                message = ""
+                economy_seat = ""
                 self.kill_driver()
                 return ErrCodes.TEKRAR_DENE
         except TimeoutException:

@@ -4,7 +4,7 @@ Base version @author: Birol Emekli, https://github.com/bymcs
 Enhanced (Forked) version @author: Mehmet C. Aksoy https://github.com/mcagriaksoy
 """
 
-from os import path, system
+import os
 import platform
 from datetime import date, datetime
 from time import sleep
@@ -25,8 +25,8 @@ import TelegramMsg
 
 g_isStopped = False
 
-FULL_SIZE = (310, 677)
-HALF_SIZE = (310, 567)
+FULL_SIZE = (310, 777)
+HALF_SIZE = (310, 647)
 
 def main():
     def driver_setting():
@@ -102,7 +102,7 @@ def main():
         "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
         keep_on_top=True,
         auto_close=True,
-        auto_close_duration=15,
+        auto_close_duration=10,
         title = "",
         non_blocking=True
     
@@ -117,7 +117,15 @@ def main():
                 )
             ]
         ],
-        
+        [
+            sg.Column(
+                [[sg.Button('', image_filename='donate.jpg', key='donate', button_color=('black', 'black'), size=(10, 1))]],
+                justification="center",
+                element_justification="center",
+                expand_x=True,
+            )
+        ],
+            
         [sg.Button("TCDD Sitesine git!", size=(20, 1)),
          sg.Button("Yardım", size=(20, 1)),
         ],
@@ -149,16 +157,16 @@ def main():
         ],
         [
             sg.CalendarButton(
-                "Takvim",
+                "Takvim ",
                 target="tarih",
                 format="%d.%m.%Y",
                 default_date_m_d_y=(int(month), int(day), int(year)),
             ),
-            sg.Input(key="tarih", size=(20, 1), default_text=currentDate),
-            sg.Button("Bugün", size=(15, 1)),
+            sg.Input(key="tarih", size=(14, 1), default_text=currentDate),
+            sg.Button("Bugün", size=(6, 1)),
         ],
         [
-            sg.Text("Saat :", size=(7, 1)),
+            sg.Text("Saat:", size=(7, 1)),
             sg.InputText(default_text=currentTime, size=(14, 5), key="saat"),
         ],
 
@@ -228,7 +236,10 @@ def main():
 
     while True:
         event, values = window.read()
-        # driver = None
+
+        if event == "donate":
+            wbopen("https://www.buymeacoffee.com/mcagriaksoy")
+
         if event == "Bugün":
             window["tarih"].update(currentDate)
 

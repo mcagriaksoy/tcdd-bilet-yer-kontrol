@@ -14,6 +14,8 @@ class DriverGet:
     ''' Driver'ı alır ve sayfayı yükler.'''
 
     def __init__(self, driver, url="https://ebilet.tcddtasimacilik.gov.tr"):
+        if driver is None:
+            raise ValueError("Driver cannot be None")
         self.url = url
         self.driver = driver
 

@@ -42,7 +42,6 @@ class Control:
                     xpath = f'//*[@id="gidis{row}btn"]/div/div[2]/div/div[2]/div[2]/span[1]/time'
                     aranan_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
                         (By.XPATH, xpath)))
-                    sys.stdout.write("aaaaa " + aranan_element.text)
                     aranan = aranan_element.text
                     sleep(0.2)
                     if self.zaman == aranan:
@@ -87,8 +86,8 @@ class Control:
                             sys.stdout.write(
                                 "\nAradığınız seferde suan hiç boş yer yok...")
                             return ErrCodes.TEKRAR_DENE
-                    else:
-                        sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))
+                    #else:
+                        #sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))
                 self.kill_driver()
                 return ErrCodes.SAAT_HATASI
                     

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Base version @author: Birol Emekli, https://github.com/bymcs
-Enhanced (Forked) version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
+Enhanced (Forked) version @author: Mehmet C. Aksoy https://github.com/mcagriaksoy
 """
 
 from os import path, system
@@ -25,8 +25,8 @@ import TelegramMsg
 
 g_isStopped = False
 
-FULL_SIZE = (310, 600)
-HALF_SIZE = (310, 507)
+FULL_SIZE = (310, 677)
+HALF_SIZE = (310, 567)
 
 def main():
     def driver_setting():
@@ -46,13 +46,6 @@ def main():
             window["Durdur!"].update(disabled=True)
             driver.quit()
             return
-
-    def kill_chrome():
-        """Chrome'u kapatır."""
-        if platform.system() == "Windows":
-            system("taskkill /im chromium.exe /f")
-        else:
-            system("pkill chromium")
 
     def control(driver, time, delay_time, telegram_msg, bot_token, chat_id, ses):
         """Sayfada yer var mı yok mu kontrol eder."""
@@ -91,9 +84,6 @@ def main():
             window["Aramaya Başla"].update(disabled=False)
             window["Durdur!"].update(disabled=True)
 
-        # Chrome'u kapat!
-        # kill_chrome()
-
     # GUI Ayarlari
     font = ("Verdana", 10)
     sg.theme("SystemDefault1")
@@ -108,7 +98,7 @@ def main():
     currentTime = now.strftime("%H:%M")
 
     sg.popup(
-        "💖 Selam, Hos geldin 💖",
+        "Merhaba, Hos geldin :)",
         "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
         keep_on_top=True,
         auto_close=True,
@@ -122,7 +112,7 @@ def main():
         [
             [
                 sg.Column(
-                    [[sg.Text("by Mehmet Cagri Aksoy 2022-2024")]],
+                    [[sg.Text("by Mehmet C. Aksoy 2022-2025")]],
                     justification="center",
                 )
             ]
@@ -151,6 +141,13 @@ def main():
             ),
         ],
         [
+            sg.Text("Arama yapılacak bilet türünü seçiniz:"),
+        ],
+        [
+            sg.Checkbox("Ekonomi", default=True, key="ekonomi"),
+            sg.Checkbox("Business", default=True, key="business"),
+        ],
+        [
             sg.CalendarButton(
                 "Takvim",
                 target="tarih",
@@ -158,11 +155,13 @@ def main():
                 default_date_m_d_y=(int(month), int(day), int(year)),
             ),
             sg.Input(key="tarih", size=(20, 1), default_text=currentDate),
+            sg.Button("Bugün", size=(15, 1)),
         ],
         [
             sg.Text("Saat :", size=(7, 1)),
             sg.InputText(default_text=currentTime, size=(14, 5), key="saat"),
         ],
+
         [sg.Text("Arama Sıklığını seçiniz: (dakikada bir)")],
         [
             sg.Slider(
@@ -188,7 +187,7 @@ def main():
         [sg.InputText(key="chat_id", size=(35, 5))],
         [sg.Text("Ses Ayarlari: (Opsiyonel)")],
         [sg.Checkbox("Bilet bulunursa ses çal!", default=True, key="ses")],
-        [sg.Button("Aramaya Başla"), sg.Button("Durdur!"), sg.Button("Kapat!"), sg.Button("↓")],
+        [sg.Button("Aramaya Başla"), sg.Button("Durdur!"), sg.Button("Kapat!"), sg.Button("↑")],
         [
             sg.Multiline(
                 "", size=(32, 8), key="log", autoscroll=True, reroute_stdout=True
@@ -197,7 +196,7 @@ def main():
     ]
 
     window = sg.Window(
-        "TCDD Bilet Arama Botu",
+        "TCDD Otomatik Bilet Arama Programı",
         layout,
         icon=r"./icon.ico",
         size=FULL_SIZE,
@@ -230,13 +229,15 @@ def main():
     while True:
         event, values = window.read()
         # driver = None
+        if event == "Bugün":
+            window["tarih"].update(currentDate)
 
-        if event == "↓":
+        if event == "↑":
             if window.size == FULL_SIZE:
-                window["↓"].update("↑")
+                window["↑"].update("↓")
                 window.size = HALF_SIZE
             else:
-                window["↓"].update("↓")
+                window["↑"].update("↑")
                 window.size = FULL_SIZE
 
         if event == sg.WIN_CLOSED or event == "Kapat!":
@@ -283,6 +284,8 @@ def main():
             nereye = values["nereye"]
             tarih = values["tarih"]
             saat = values["saat"]
+            business = values["business"]
+            ekonomi = values["ekonomi"]
             
             if saat == "":
                 sg.popup("Lütfen saat bilgisini giriniz!")
@@ -292,6 +295,9 @@ def main():
                 continue
             elif nereden == nereye:
                 sg.popup("Nereden ve Nereye aynı olamaz!")
+                continue
+            elif business == False and ekonomi == False:
+                sg.popup("Lütfen bilet türünü seçiniz!")
                 continue
 
             if "/" in tarih:

@@ -31,13 +31,17 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 
 
 ## Versionlar
+v3
+
+- Yenilenen tcdd websitesi icin uyum saglandi.
+- Kod tamamen yenilendi!
+- Arama algoritmasi yeni siteye uyum saglandi.
+
+![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_2.jpg)
+
 v2.4
 
 - Takvimden kaynaklanan bir sorun cozuldu.
-
-Yeni UI:
-
-![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_2.jpg)
 
 v2.3
 

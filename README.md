@@ -1,6 +1,9 @@
 # TCDD Bilet Kontrol Etme Programi
 TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda kalmadan, ayarlayacaginiz periyotlarla websitesinden bilet yer durumunu ogrenebilmeniz saglanmistir. Uygulama kullanıcıların bilet arama işlemlerini kolaylaştırmak ve otomatize etmek amacıyla tasarlanmış bir uygulamadır. Bu uygulama, Türkiye Cumhuriyeti Devlet Demiryolları (TCDD) tarafından sunulan biletlerin doğruluğunu ve geçerliliğini hızlı ve güvenli bir şekilde kontrol etmeyi sağlar.
 
+Bana asagidaki buton ile destek olabilirsiniz :)
+
+<a href="https://www.buymeacoffee.com/mcagriaksoy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 ## Özellikler:
 
 Kolay Bilet Arama: Verilen saat, tarih, kalkis ve varis bilgileri ile.

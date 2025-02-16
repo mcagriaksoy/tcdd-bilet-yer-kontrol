@@ -33,11 +33,19 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 ## Versionlar
 v3
 
-- Yenilenen tcdd websitesi icin uyum saglandi.
-- Kod tamamen yenilendi!
-- Arama algoritmasi yeni siteye uyum saglandi.
+-Yenilenen tcdd websitesi icin uyum saglandi.
 
-![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_2.jpg)
+-Kod tamamen yenilendi!
+
+-Arama algoritmasi yeni siteye uyum saglandi.
+
+-Donate butonu eklendi.
+
+-Pyinstaller paketi 6.surumune guncellendi.
+
+-Selenium webdriver buffer sorunu cozuldu.
+
+![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_3.jpg)
 
 v2.4
 

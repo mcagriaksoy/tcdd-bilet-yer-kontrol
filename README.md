@@ -27,7 +27,7 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 
 ## Indir
 
-[![Download - v2.4](https://img.shields.io/static/v1?label=Download&message=v2.4&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.4/TCDD.Bilet.Bulma.Botu.v2.4.zip)
+[![Download - v3](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3/TCDD.Bilet.Bulma.Botu.v3.zip)
 
 
 ## Versionlar

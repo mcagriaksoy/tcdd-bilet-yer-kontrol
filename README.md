@@ -36,6 +36,8 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 ## Versionlar
 v3
 
+## NOT: Eger su hatayi aliyorsaniz: "Driver ayarlarında hata oluştu: Message: session not created: probably user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir" Arkada acik olan tum chromium tabanli tarayicilari kapatip tekrar deneyiniz.
+
 -Yenilenen tcdd websitesi icin uyum saglandi.
 
 -Kod tamamen yenilendi!
@@ -165,3 +167,7 @@ $ python main.py
 ya da .exe dosyasini calistirabilirsiniz.
 
 Buradan indirebilirsiniz: [tcddBiletYerKontrol_v2.0.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)
+
+### Tesekkur
+
+@alporak yardimlarin icin tesekkurler :)

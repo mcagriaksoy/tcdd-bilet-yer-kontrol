@@ -46,25 +46,40 @@ class Control:
                     sleep(0.2)
                     if self.zaman == aranan:
                         sys.stdout.write("\nAranan saat bulundu...")
-                        # click xpath above
-                        element = WebDriverWait(self.driver, 50).until(EC.element_to_be_clickable(
-                            (By.XPATH, xpath)))
-                        element.click()
-                        #koltuk_xpath "/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[8]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[2]/button/div/div[2]/div/div/span/text()"
-                        message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
-                            (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[2]/button/div/div[2]/div/div/span')))
-                        economy_seat = message_element.text
-
-                        message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
-                            (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/button/div/div[2]/div/div/span')))
-                        business_seat = message_element.text
                         
+                        try:
+                            # click xpath above
+                            element = WebDriverWait(self.driver, 50).until(EC.element_to_be_clickable(
+                                (By.XPATH, xpath)))
+                            element.click()
+
+                            # check index 1 to 4
+                            economy_row = 2
+
+                            for index in range(1, 5):
+                                text = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
+                                    (By.XPATH, f'html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{index}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[{index}]/button/div/div[1]/span'))).text
+                                if text == "EKONOMİ":
+                                    economy_row = index
+
+                            message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
+                                (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[{economy_row}]/button/div/div[2]/div/div/span')))
+                            economy_seat = message_element.text
+
+                            message_element = WebDriverWait(self.driver, 50).until(EC.visibility_of_element_located(
+                                (By.XPATH, f'/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row+1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/button/div/div[2]/div/div/span')))
+                            business_seat = message_element.text
+
+                        except:
+                            sys.stdout.write("\nYer bulunamadi. Tekrar denenecek!")
+                            return ErrCodes.TEKRAR_DENE
+
                         # delete first and last characters
                         economy_seat = economy_seat[1:-1]
                         business_seat = business_seat[1:-1]
 
-                        sys.stdout.write(economy_seat)
-                        sys.stdout.write(business_seat)
+                        #sys.stdout.write(economy_seat)
+                        #sys.stdout.write(business_seat)
 
                         # convert to integer
                         economy_seat = int(economy_seat)
@@ -84,7 +99,7 @@ class Control:
                             return ErrCodes.BASARILI
                         else:
                             sys.stdout.write(
-                                "\nAradığınız seferde suan hiç boş yer yok...")
+                                "\nAradığınız seferde suan hiç boş yer yok ya da sadece engelli koltugu mevcut!")
                             return ErrCodes.TEKRAR_DENE
                     #else:
                         #sys.stdout.write("\nSaatler inceleniyor Adim: " + str(row))

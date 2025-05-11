@@ -30,10 +30,13 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 
 ## Indir
 
-[![Download - v3](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3.2/TCDD.Bilet.Bulma.Botu.v3.2.zip)
+[![Download - v3.2](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3.2/TCDD.Bilet.Bulma.Botu.v3.2.zip)
 
+## Ekran Goruntusu
 
-## Versionlar
+![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot.jpg)
+
+## Version Degisimleri
 v3.2
 - PySimpleGUI tamamen kaldirildi.
 - UI Tkinker ile yeniden yazildi.
@@ -151,26 +154,17 @@ v1.0
 - Bildirim sistemi güncellenecek, sms ya da e posta eklenecek.
 - tcdd chapta koruması tespiti yapılacak.
 
-# TCDD Bilet Kontrol
-
-- Uygulama TCDD sitesine özel tasarlanmıştır.
-
-- Uygulama seçilen dakika aralıklarında (1 - 10 dk) sorgu yapmaktadır
-
-- Bilet bulunursa telegram uzerinden mesaj gonderebilmektedir.
-
-- Bilet bulunursa sesli uyari ve popup uyarisinda bulunabilmektedir.
 
 ### Kullanımı
 
-```sh
-$ python main.py
+Oncelikle gerekli kutuphaneleri yuklemek icin asagidaki komutu cagirin:
 ```
-
-ya da .exe dosyasini calistirabilirsiniz.
-
-Buradan indirebilirsiniz: [tcddBiletYerKontrol_v3.2.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3.2/TCDD.Bilet.Bulma.Botu.v3.2.zip)
-
+pip install -r requirements.txt
+```
+Sonrasinda main.py yi cagirabilirsiniz:
+```
+python main.py
+```
 ### Tesekkur
 
 @alporak yardimlarin icin tesekkurler :)

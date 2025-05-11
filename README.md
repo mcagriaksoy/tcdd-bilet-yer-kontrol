@@ -34,9 +34,16 @@ Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel
 
 
 ## Versionlar
+v3.2
+- PySimpleGUI tamamen kaldirildi.
+- UI Tkinker ile yeniden yazildi.
+- Timeout sorunu cozuldu.
+- Guncellenen tcdd websitesine erisim sorunu cozuldu.
+- Yeni browser ozellikleri eklendi.
+
 v3
 
-## NOT: Eger su hatayi aliyorsaniz: "Driver ayarlarında hata oluştu: Message: session not created: probably user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir" Arkada acik olan tum chromium tabanli tarayicilari kapatip tekrar deneyiniz.
+NOT: Eger su hatayi aliyorsaniz: "Driver ayarlarında hata oluştu: Message: session not created: probably user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir" Arkada acik olan tum chromium tabanli tarayicilari kapatip tekrar deneyiniz.
 
 -Yenilenen tcdd websitesi icin uyum saglandi.
 
@@ -49,8 +56,6 @@ v3
 -Pyinstaller paketi 6.surumune guncellendi.
 
 -Selenium webdriver buffer sorunu cozuldu.
-
-![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot_3.jpg)
 
 v2.4
 
@@ -126,8 +131,6 @@ v1.3
 - bilinen çökme sorunları çözüldü.
 - yeni rotalar eklendi.
 
-SS:
-![python_k81455g7zP](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/screenshot.png)
 
 v1.1
 
@@ -166,7 +169,7 @@ $ python main.py
 
 ya da .exe dosyasini calistirabilirsiniz.
 
-Buradan indirebilirsiniz: [tcddBiletYerKontrol_v2.0.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v2.0/TCDD.Bilet.Bulma.Botu.v2.0.zip)
+Buradan indirebilirsiniz: [tcddBiletYerKontrol_v3.2.zip](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3.2/TCDD.Bilet.Bulma.Botu.v3.2.zip)
 
 ### Tesekkur
 

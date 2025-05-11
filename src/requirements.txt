@@ -1,4 +1,4 @@
-PySimpleGUI==4.60.5
+tkcalendar
 selenium
 webdriver_manager
 python-telegram-bot

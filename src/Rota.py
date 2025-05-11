@@ -12,12 +12,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-
 NEREDEN_BOX = "//*[@id=\"fromTrainInput\"]"
 NEREYE_BOX = "//*[@id=\"toTrainInput\"]"
-TARIH_BOX = "//*[@id=\"__BVID__100\"]/section/div[3]"
+TARIH_BOX = "//*[@id=\"__BVID__101\"]/section/div[3]"
 BUTTON_BOX = "//*[@id=\"searchSeferButton\"]"
-DATE_TODAY = '#__BVID__100 > section > div.row.pb-3.seferSearchDateRangePicker > div > div > div.daterangepicker.ltr.show-calendar.single.openscenter.linked > div.calendars > div > div.drp-calendar.col.left.single > div > table > tbody > tr:nth-child(4) > td.weekend.today.start-date'
+DATE_TODAY = '#__BVID__101 > section > div.row.pb-3.seferSearchDateRangePicker > div > div > div.daterangepicker.ltr.show-calendar.single.openscenter.linked > div.calendars > div > div.drp-calendar.col.left.single > div > table > tbody > tr:nth-child(4) > td.weekend.today.start-date'
 
 class Rota:
     """Rota bilgilerini alır ve gerekli yerlere yazar."""

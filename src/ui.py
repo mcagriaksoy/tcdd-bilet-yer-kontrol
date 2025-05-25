@@ -55,11 +55,12 @@ def main():
         response = Control.Control(driver, time).sayfa_kontrol()
         if response == ErrCodes.BASARILI:
             if ses:
-                for i in range(5):
-                    if platform.system() == "Windows":
-                        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
-                    elif platform.system() == "Darwin" or platform.system() == "Linux":
-                        os.system('play -n synth 0.1 sine 660')
+                try:
+                    for _ in range(5):  # Play the sound 5 times
+                        winsound.Beep(1000, 500)  # Frequency: 1000 Hz, Duration: 500 ms
+                        sleep(0.1)  # Short delay between beeps
+                except Exception as e:
+                    print(f"Failed to play sound: {e}")
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
             messagebox.showinfo("Bilet Bulundu", "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️")

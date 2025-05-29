@@ -22,6 +22,7 @@ function App() {
       const data = await res.json();
       setResults(data);
     } catch (err) {
+      console.error("Error fetching results:", err);
       setResults({ error: "Error fetching results." });
     }
     setLoading(false);

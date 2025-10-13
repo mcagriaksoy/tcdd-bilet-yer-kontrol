@@ -12,6 +12,7 @@ TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda k
 Basitçe: bu program TCDD bilet sitesini belirtilen aralıklarla kontrol ederek seçtiğiniz seferde boş koltuk olup olmadığını size bildirir. Otomasyon, sesli/görsel uyarı ve (isteğe bağlı) Telegram bildirimleri sağlar.
 
 Bana aşağıdaki buton ile destekte bulunabilirsin...
+
 <a href="https://www.buymeacoffee.com/mcagriaksoy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>
 
 ## Öne çıkan özellikler
@@ -30,7 +31,7 @@ Bu proje TCDD veya onun bağlı kuruluşları tarafından desteklenmemektedir. T
 
 ## İndir
 
-[![Download - v4.0](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v4.0/TCDD.Bilet.Bulma.Botu.v4.0.zip)
+[![Download - v4.0](https://img.shields.io/static/v1?label=Download&message=v4_0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v4.0/TCDD.Bilet.Bulma.Botu.v4.0.zip)
 
 ## Ekran Görüntüsü
 

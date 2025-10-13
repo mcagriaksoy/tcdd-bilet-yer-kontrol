@@ -4,3 +4,4 @@
 src/__pycache__/*
 src/build/*
 src/dist/*
+*.log

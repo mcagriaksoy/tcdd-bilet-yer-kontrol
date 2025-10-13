@@ -1,170 +1,85 @@
-# TCDD Bilet Kontrol Etme Programi
+[![mcagriaksoy - tcdd-bilet-yer-kontrol](https://img.shields.io/static/v1?label=mcagriaksoy&message=tcdd-bilet-yer-kontrol&color=red&logo=github)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol "Go to GitHub repo")
+[![stars - tcdd-bilet-yer-kontrol](https://img.shields.io/github/stars/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol)
+[![forks - tcdd-bilet-yer-kontrol](https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol)
+[![GitHub release](https://img.shields.io/github/release/mcagriaksoy/tcdd-bilet-yer-kontrol?include_prereleases=&sort=semver&color=red)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/)
+[![License](https://img.shields.io/badge/License-GPL--3.0--1-red)](#license)
+[![issues - tcdd-bilet-yer-kontrol](https://img.shields.io/github/issues/mcagriaksoy/tcdd-bilet-yer-kontrol)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/issues)
+
+
 TCDD bilet yer kontrol programi sayesinde tcdd sitesine surekli girmek zorunda kalmadan, ayarlayacaginiz periyotlarla websitesinden bilet yer durumunu ogrenebilmeniz saglanmistir. Uygulama kullanıcıların bilet arama işlemlerini kolaylaştırmak ve otomatize etmek amacıyla tasarlanmış bir uygulamadır. Bu uygulama, Türkiye Cumhuriyeti Devlet Demiryolları (TCDD) tarafından sunulan biletlerin doğruluğunu ve geçerliliğini hızlı ve güvenli bir şekilde kontrol etmeyi sağlar.
 
-Bana asagidaki buton ile destek olabilirsiniz :)
 
-<a href="https://www.buymeacoffee.com/mcagriaksoy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-## Özellikler:
+Basitçe: bu program TCDD bilet sitesini belirtilen aralıklarla kontrol ederek seçtiğiniz seferde boş koltuk olup olmadığını size bildirir. Otomasyon, sesli/görsel uyarı ve (isteğe bağlı) Telegram bildirimleri sağlar.
 
-Kolay Bilet Arama: Verilen saat, tarih, kalkis ve varis bilgileri ile.
+Bana aşağıdaki buton ile destekte bulunabilirsin...
+<a href="https://www.buymeacoffee.com/mcagriaksoy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>
 
-Otomatik Kontrol: Bilet bilgilerini otomatik olarak kontrol etme ve doğrulama.
+## Öne çıkan özellikler
 
-Kullanıcı Dostu Arayüz: Basit ve anlaşılır tasarım ile kolay kullanım. Bilet bulunmasi, veya biletin bosa cikmasi durumunda, sesli ve gorsel uyari.
+- Kolay arama: tarih, saat, kalkış ve varış bilgileri ile arama.
+- Otomatik periyodik kontrol: belirlediğiniz aralıklarla bilet kontrolü.
+- Sesli ve görsel uyarılar.
+- Telegram ile (isteğe bağlı) bildirim gönderme desteği.
+- Windows/Linux/macOS üzerinde çalışacak şekilde tasarlandı (Selenium/Edge kullanımı).
 
-Hızlı İşlem: Bilet bilgilerini anında kontrol etme imkanı. 10 Saniye icerisinde bilet yer durumu kontrolu.
+## Uyarı / Sorumluluk Reddi
 
-Güvenli: Kullanıcı bilgilerini güvenli bir şekilde işleme. Hic bir kisisel bilginiz tutulmaz, bilgiler tamamen TCDD sitesine aktarilir.
+⚠️ UYARI: Bu yazılım "olduğu gibi" sağlanmaktadır. Yazılımın kullanımı sonucu ortaya çıkabilecek her türlü zarardan, hesabınızın kısıtlanması, TCDD sitesinin erişim engeli, veri kaybı, hizmet kesintisi veya benzeri olumsuz durumlardan proje sahipleri, katkıda bulunanlar veya dağıtıcısı sorumlu tutulamaz. Bu aracı kullanmadan önce TCDD'nin kullanım şartlarını ve ilgili mevzuatı kontrol edin. Herhangi bir otomasyon işlemine başlamadan önce kendi risk değerlendirmesini yapınız.
 
+Bu proje TCDD veya onun bağlı kuruluşları tarafından desteklenmemektedir. Tamamen açık kaynak kodlu gönüllü bir projedir.
 
-<a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol" title="Go to GitHub repo"><img src="https://img.shields.io/static/v1?label=mcagriaksoy&message=tcdd-bilet-yer-kontrol&color=blue&logo=github" alt="mcagriaksoy - tcdd-bilet-yer-kontrol"></a>
-<a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/"><img src="https://img.shields.io/github/tag/mcagriaksoy/tcdd-bilet-yer-kontrol?include_prereleases=&sort=semver&color=blue" alt="GitHub tag"></a>
-<a href="#license"><img src="https://img.shields.io/badge/License-MIT-blue" alt="License"></a>
-<a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/issues"><img src="https://img.shields.io/github/issues/mcagriaksoy/tcdd-bilet-yer-kontrol" alt="issues - tcdd-bilet-yer-kontrol"></a>
-[![OS - Linux](https://img.shields.io/badge/OS-Linux-blue?logo=linux&logoColor=white)](https://www.linux.org/ "Go to Linux homepage")
-[![Hosted with GH Pages](https://img.shields.io/badge/Hosted_with-GitHub_Pages-blue?logo=github&logoColor=white)](https://pages.github.com/ "Go to GitHub Pages homepage")
-[![OS - Windows](https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white)](https://www.microsoft.com/ "Go to Microsoft homepage")
+## İndir
 
-<a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/stars/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="stars - tcdd-bilet-yer-kontrol"></a>
-<a href="https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"><img src="https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social" alt="forks - tcdd-bilet-yer-kontrol"></a>
+[![Download - v4.0](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v4.0/TCDD.Bilet.Bulma.Botu.v4.0.zip)
 
-## Indir
-
-[![Download - v3.2](https://img.shields.io/static/v1?label=Download&message=v3&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/download/v3.2/TCDD.Bilet.Bulma.Botu.v3.2.zip)
-
-## Ekran Goruntusu
+## Ekran Görüntüsü
 
 ![Screenshot](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/blob/master/img/Screenshot.jpg)
 
-## Version Degisimleri
-v3.2
-- PySimpleGUI tamamen kaldirildi.
-- UI Tkinker ile yeniden yazildi.
-- Timeout sorunu cozuldu.
-- Guncellenen tcdd websitesine erisim sorunu cozuldu.
-- Yeni browser ozellikleri eklendi.
+## Kurulum
 
-v3
+1. Python 3.8+ yüklü olduğundan emin olun.
+2. Gerekli paketleri yükleyin:
 
-NOT: Eger su hatayi aliyorsaniz: "Driver ayarlarında hata oluştu: Message: session not created: probably user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir" Arkada acik olan tum chromium tabanli tarayicilari kapatip tekrar deneyiniz.
-
--Yenilenen tcdd websitesi icin uyum saglandi.
-
--Kod tamamen yenilendi!
-
--Arama algoritmasi yeni siteye uyum saglandi.
-
--Donate butonu eklendi.
-
--Pyinstaller paketi 6.surumune guncellendi.
-
--Selenium webdriver buffer sorunu cozuldu.
-
-v2.4
-
-- Takvimden kaynaklanan bir sorun cozuldu.
-
-v2.3
-
-Bircok Edge webdriver sorunu cozuldu.
-    - webdriver kapanamama sorunu cozuldu.
-- Webdriver artik sayfanin yuklenmesini daha cok bekliyor.
-- Koltuk sayisini bulan regex algoritmasi yeniden yazildi.
- UI tarafi:
-    - Artik kullanici saati 17,30 17.30 veya 17:30 cinsinde girebiliyor.
-    - Ayni sekilde tarihler -, ., / cinsinden de yazilabiliyor.
-    - Hata durumlari icin mekanizma eklendi.
-
-v2.2.1
-
-Chrome kaldirildi. Artik Edge ile tarama yapiliyor.
-Seleniumdan kaynaklanan bir hata sebebiyle .exe surumu bozuldu. Gecici sureyle GUI arkasinda konsol cikacak.
-
-v2.2
-- [25.03.2024] Hata cikaran telegram modulu suan icin kaldirildi.
-- Daha kucuk executable icin pygame kutuphanesi kucultuldu.
-- Icon kaldirildi, iconu avast virus olarak tanimliyordu. :D
-
-v2.1
-- Eksik olan Eskisehir ili eklendi!
-
-v2.0
-
-- Bilet bulunca ortaya cikan bir hata giderildi.
-- Bilet arama algoritmasi optimize edildi.
-- Koltuk sayisi hesaplama algoritmasi bastan tasarlandi.
-- Ses kutuphanesi duzenlendi. Artik her denemede bir uyari sesi cikiyor.
-- Bilet bulununca ortaya cikan ses calamama sorunu cozuldu.
-- Eksik olan tum sehirler eklendi. 100+ durak eklendi.
-
-v1.7
-
-- Windows destegi genisletildi!
-- Calistirilabilir icerik (.exe) Eklendi!
-- Telegram mesaj botu destegi eklendi. Artik bilet bulundugunda telegram uzerinden telefonuna mesaj gonderilebilecek!
-- Sesli uyari butonu eklendi.
-- Kod optimizasyonu yapildi. Uygulama artik daha hizli calisiyor!
-
-v1.6
-
-- Linux, macOS destegi eklendi.
-- PyLint sorunlari cozuldu.
-- Dizinleme yapildi.
-
-v1.5
-
-- Yorucu bir release
-- Tüm tcdd arayüzü değiştiği için selenium tekrar configure edildi.
-- tcdd sitesi bloklamasına karşı, gizli chrome araması kapatıldı, artık chrome program ile birlikte açılıyor.
-- selenium hata ayarları güncellendi.
-- return mekanizması eklendi, hata kodları ve butonlar güncellendi.
-- durak isimleri güncellendi.
-- birden fazla aramanın önüne geçebilmek için buton kilitleme işlevi eklendi.
-
-v1.4
-
-- sesli uyarı eklendi.
-
-v1.3
-
-- icon eklendi
-- .exe düzeltildi.
-- selenium performansı arttırıldı.
-- loglama mekanizması düzeltildi.
-- bilinen çökme sorunları çözüldü.
-- yeni rotalar eklendi.
-
-
-v1.1
-
-- Slider eklendi.
-- Bilet bulunca ortaya çıkan popup eklendi!
-- Bulunan kişi sayısındaki hata giderildi.
-
-v1.0
-
-- GUI Düzenlendi, loglama mekanizması eklendi, stdout loglara yazdırıldı.
-- Yeni durak isimleri eklendi.
-- Mekanizmalar yeniden düzenlendi.
-
-- Ocak 2023 Gelecek Güncellemeler
-- .exe sürümü yayımlanacak - DONE!
-- logo eklenecek.
-- hatalar giderilecek.
-- Bildirim sistemi güncellenecek, sms ya da e posta eklenecek.
-- tcdd chapta koruması tespiti yapılacak.
-
-
-### Kullanımı
-
-Oncelikle gerekli kutuphaneleri yuklemek icin asagidaki komutu cagirin:
-```
+```powershell
 pip install -r requirements.txt
 ```
-Sonrasinda main.py yi cagirabilirsiniz:
-```
+
+3. Chrome yerine Edge (Chromium) kullanılması önerilir; sisteminizde uygun webdriver (msedgedriver) olduğundan emin olun.
+
+## Kullanım
+
+Programı başlatmak için:
+
+```powershell
 python main.py
 ```
-### Tesekkur
 
-@alporak yardimlarin icin tesekkurler :)
+UI üzerinden arama parametrelerini girin (kalkış, varış, tarih, saat) ve otomatik kontrolü başlatın.
+
+Not: Eğer "session not created: probably user data directory is already in use" gibi bir hata alırsanız, açık Chromium tablarını kapatıp tekrar deneyin.
+
+
+## Sürüm Notları (kısa)
+
+Projedeki ana değişiklikler ve geçmiş sürümler için GitHub sürümler sayfasına bakabilirsiniz. Öne çıkanlar:
+- v4.0
+	- UI: Arayüz yenilenip kullanıcı deneyimi geliştirildi (yeni tasarım, daha stabil pencere yönetimi).
+	- Tarayıcı desteği: Selenium/Edge yapılandırmaları güncellendi; msedgedriver ile daha uyumlu hale getirildi.
+	- Otomasyon: Arama ve tekrar mekanizmaları optimize edildi; periyot ve zaman aşımı davranışları iyileştirildi.
+	- Hata yönetimi: Webdriver bağlantı sorunları ve oturum çakışmalarına karşı daha iyi hata yakalama ve yönlendirme eklendi.
+	- Bildirimler: Sesli uyarı ve Telegram bildirimleri kararlılık açısından güncellendi.
+	- Bağımlılıklar: requirements ve paket yönetimi güncellendi; PySimpleGUI tamamen çıkarıldı ve bağımlılıklar sadeleştirildi.
+	- Düzeltmeler: Bilinen birkaç çökme ve performans sorunu giderildi.
+- v3.2: PySimpleGUI kaldırıldı, UI Tkinter ile yeniden yazıldı, timeout ve site erişim sorunları giderildi.
+- v3: Kod büyük oranda yenilendi, arama algoritması güncellendi.
+
+Detaylı değişiklik geçmişi orijinal README içeriğinde bulunmaktadır.
+
+## Katkıda Bulunanlar & Teşekkür
+
+Teşekkürler: @alporak ve katkıda bulunanlar.
+
+## Lisans
+
+Bu proje GNU GENERAL PUBLIC LICENSE Version 3 lisansı ile lisanslanmıştır. Daha fazla detay için `LICENSE` dosyasına bakınız.

@@ -6,12 +6,16 @@ Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 
 import sys
 from time import sleep
+import logging
+import ctypes
+import os
 
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     NoSuchElementException,
     TimeoutException,
     UnexpectedAlertPresentException,
+    InvalidSessionIdException,
 )
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -29,12 +33,45 @@ class Control:
         """Constructor methodu."""
         self.driver = driver
         self.zaman = time
+        # logging setup
+        if not logging.getLogger().handlers:
+            logging.basicConfig(
+                filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
+                level=logging.DEBUG,
+                format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+            )
+        self.logger = logging.getLogger(__name__)
+
+    def _notify_user(self, message, title="TCDD Bilet"):
+        try:
+            ctypes.windll.user32.MessageBoxW(0, message, title, 0x40)
+        except Exception:
+            self.logger.debug("Popup failed")
 
     def kill_driver(self):
         """Driver'ı kapatır."""
-        self.driver.delete_all_cookies()
-        self.driver.close()
-        self.driver.quit()
+        try:
+            # Protect against calling methods on a closed/invalid session
+            if self.driver:
+                session_id = getattr(self.driver, "session_id", None)
+                if session_id:
+                    try:
+                        self.driver.delete_all_cookies()
+                    except Exception:
+                        self.logger.debug("delete_all_cookies failed or session invalid")
+                    try:
+                        self.driver.close()
+                    except Exception:
+                        self.logger.debug("close failed or session invalid")
+                    try:
+                        self.driver.quit()
+                    except Exception:
+                        self.logger.debug("quit failed or session invalid")
+                else:
+                    self.logger.debug("Driver session_id is None or invalid; skipping close/quit.")
+            self.logger.info("Driver kapatma işlemi tamamlandı (guarded).")
+        except Exception as e:
+            self.logger.exception(f"Kill driver sırasında hata: {e}")
 
     def sayfa_kontrol(self):
         """Sayfada yer var mı yok mu kontrol eder."""
@@ -47,7 +84,7 @@ class Control:
             if element:
                 sys.stdout.write("\nAranan saat: " + self.zaman + "\n")
                 for row in range(0, MAX_TREN_SAYISI):
-                    sleep(0.2)
+                    sleep(0.02)
                     xpath = f'//*[@id="gidis{row}btn"]/div/div[2]/div/div[2]/div[2]/span[1]/time'
                     try:
                         aranan_element = WebDriverWait(self.driver, 10).until(
@@ -175,21 +212,63 @@ class Control:
                 sys.stdout.write("\nAradığınız seferde boş yer yoktur...")
                 self.kill_driver()
                 return ErrCodes.TEKRAR_DENE
+        except InvalidSessionIdException as ise:
+            # Browser/session closed unexpectedly -> log, notify, cleanup and return retry
+            msg = f"Tarayıcı oturumu geçersiz: {ise}"
+            sys.stdout.write("\n" + msg)
+            self.logger.exception(msg)
+            try:
+                self.kill_driver()
+            except Exception:
+                self.logger.debug("kill_driver failed after InvalidSessionIdException")
+            self._notify_user("Tarayıcı oturumu kapandı veya bağlantı koptu.", "Oturum Koptu")
+            return ErrCodes.TIMEOUT_HATASI
         except TimeoutException:
-            sys.stdout.write("\nZaman aşımına uğradı...")
-            self.kill_driver()
+            msg = "Zaman aşımına uğradı..."
+            sys.stdout.write("\n" + msg)
+            self.logger.exception(msg)
+            try:
+                self.kill_driver()
+            except Exception:
+                self.logger.debug("kill_driver failed after TimeoutException")
+            self._notify_user(msg, "Timeout Hatası")
             return ErrCodes.TIMEOUT_HATASI
         except NoSuchElementException:
-            sys.stdout.write("\nAranan saat ya da sefer bulunamadı...")
-            self.kill_driver()
+            msg = "Aranan saat ya da sefer bulunamadı..."
+            sys.stdout.write("\n" + msg)
+            self.logger.exception(msg)
+            try:
+                self.kill_driver()
+            except Exception:
+                self.logger.debug("kill_driver failed after NoSuchElementException")
+            self._notify_user(msg, "Element Bulunamadı")
             return ErrCodes.TEKRAR_DENE
         except UnexpectedAlertPresentException:
-            sys.stdout.write(
-                "\nGüzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
-            )
-            self.kill_driver()
+            msg = "Güzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
+            sys.stdout.write("\n" + msg)
+            self.logger.exception(msg)
+            try:
+                self.kill_driver()
+            except Exception:
+                self.logger.debug("kill_driver failed after UnexpectedAlertPresentException")
+            self._notify_user(msg, "Güzergah Hatası")
             return ErrCodes.GUZERGAH_HATASI
-        except Exception as e:
-            sys.stdout.write(f"\nBilinmeyen bir hata oluştu: {e}")
+        except ConnectionAbortedError:
             self.kill_driver()
+            self.driver.quit()
+            return ErrCodes.INTERNET_HATASI
+        except ConnectionResetError:
+            self.kill_driver()
+            self.driver.quit()
+            return ErrCodes.INTERNET_HATASI
+        except Exception as e:
+            msg = f"Bilinmeyen bir hata oluştu: {e}"
+            sys.stdout.write("\n" + msg)
+            self.logger.exception(msg)
+            try:
+                self.kill_driver()
+                self.driver.quit()
+            except Exception:
+                self.logger.debug("kill_driver failed after generic exception")
+            self._notify_user(msg, "Bilinmeyen Hata")
             return ErrCodes.TEKRAR_DENE

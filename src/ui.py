@@ -13,12 +13,20 @@ import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from tkinter.scrolledtext import ScrolledText
 from tkcalendar import DateEntry
+from selenium.common.exceptions import InvalidSessionIdException
 
 import error_codes as ErrCodes
 from webbrowser import open as wbopen
 
 if platform.system() == "Windows":
     import winsound
+    try:
+        from win10toast import ToastNotifier
+        toast_available = True
+    except ImportError:
+        toast_available = False
+else:
+    toast_available = False
 
 import Control
 import DriverGet
@@ -29,8 +37,8 @@ import TelegramMsg
 
 g_isStopped = False
 
-FULL_SIZE = (310, 777)
-HALF_SIZE = (310, 647)
+FULL_SIZE = (540, 760)
+HALF_SIZE = (540, 560)
 
 
 def main():
@@ -46,7 +54,7 @@ def main():
         # ...existing code...
         global g_isStopped
         isError = Rota.Rota(driver, first_location, last_location, date_).dataInput()
-        if isError == -1 or g_isStopped == True:
+        if isError == -1 or g_isStopped:
             btn_start.config(state=tk.NORMAL)
             btn_stop.config(state=tk.DISABLED)
             driver.quit()
@@ -65,6 +73,21 @@ def main():
                     print(f"Failed to play sound: {e}")
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
+            
+            # Show Windows toast notification if available
+            if toast_available:
+                try:
+                    toaster = ToastNotifier()
+                    toaster.show_toast(
+                        "TCDD Bilet Bulundu!",
+                        "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️",
+                        icon_path=None,
+                        duration=10,
+                        threaded=True
+                    )
+                except Exception as e:
+                    print(f"Failed to show toast notification: {e}")
+            
             messagebox.showinfo(
                 "Bilet Bulundu",
                 "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️",
@@ -89,9 +112,68 @@ def main():
     currentTime = now.strftime("%H:%M")
 
     root = tk.Tk()
-    root.title("TCDD Otomatik Bilet Arama Programı")
-    root.geometry(f"{HALF_SIZE[0]}x{HALF_SIZE[1]}")
+    root.title("TCDD Otomatik Bilet Arama (Yer Bulma) Programı - v4.0.0")
     root.resizable(False, False)
+
+    # Center the window on screen
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    window_width = HALF_SIZE[0]
+    window_height = HALF_SIZE[1]
+    center_x = int((screen_width - window_width) / 2)
+    center_y = int((screen_height - window_height) / 2)
+    root.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+
+    # Bind Escape key to close window
+    root.bind('<Escape>', lambda e: root.destroy())
+
+    # Apply modern theme
+    style = ttk.Style()
+    style.theme_use('clam')
+
+    # Configure modern styling
+    style.configure('TFrame', background='#f8f9fa')
+    style.configure('TLabel', background='#f8f9fa', font=('Segoe UI', 9))
+    style.configure('TButton', font=('Segoe UI', 9, 'bold'), padding=6, relief='raised', borderwidth=1)
+    style.configure('TCheckbutton', background='#f8f9fa', font=('Segoe UI', 9))
+    style.configure('TCombobox', font=('Segoe UI', 9))
+    style.configure('TEntry', font=('Segoe UI', 9))
+    style.configure('Card.TLabelframe', background='#ffffff', borderwidth=2, relief='solid', labeloutside=False)
+    style.configure('Card.TLabelframe.Label', background='#ffffff', font=('Segoe UI', 10, 'bold'), foreground='#2c3e50')
+
+    # Button colors and styles
+    style.map('TButton',
+        background=[('active', '#007bff'), ('pressed', '#0056b3')],
+        foreground=[('active', 'white'), ('pressed', 'white')]
+    )
+
+    # Start button - green
+    style.configure('Start.TButton', background='#28a745', foreground='white', font=('Segoe UI', 10, 'bold'))
+    style.map('Start.TButton',
+        background=[('active', '#218838'), ('pressed', '#1e7e34')],
+        foreground=[('active', 'white'), ('pressed', 'white')]
+    )
+
+    # Stop button - red
+    style.configure('Stop.TButton', background='#dc3545', foreground='white', font=('Segoe UI', 10, 'bold'))
+    style.map('Stop.TButton',
+        background=[('active', '#c82333'), ('pressed', '#bd2130')],
+        foreground=[('active', 'white'), ('pressed', 'white')]
+    )
+
+    # Close button - gray
+    style.configure('Close.TButton', background='#6c757d', foreground='white', font=('Segoe UI', 9))
+    style.map('Close.TButton',
+        background=[('active', '#5a6268'), ('pressed', '#545b62')],
+        foreground=[('active', 'white'), ('pressed', 'white')]
+    )
+
+    # Disabled button style - gray for disabled state
+    style.configure('Disabled.TButton', background='#cccccc', foreground='#666666', font=('Segoe UI', 9, 'bold'))
+    style.map('Disabled.TButton',
+        background=[('active', '#cccccc'), ('pressed', '#cccccc')],
+        foreground=[('active', '#666666'), ('pressed', '#666666')]
+    )
 
     # Welcome popup
     def show_welcome():
@@ -118,65 +200,72 @@ def main():
 
     root.after(100, show_welcome)
 
-    # Layout
-    frm = ttk.Frame(root)
-    frm.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+    # Main container with modern background
+    main_frame = ttk.Frame(root, style='TFrame')
+    main_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
 
-    ttk.Label(frm, text="by Mehmet C. Aksoy 2022-2025").pack(pady=2)
+    # Header section with title and donate button
+    header_frame = ttk.Frame(main_frame, style='TFrame')
+    header_frame.pack(fill=tk.X, pady=(0, 15))
 
-    def open_donate():
-        wbopen("https://www.buymeacoffee.com/mcagriaksoy")
+    # Title and controls on the same line
+    title_frame = ttk.Frame(header_frame, style='TFrame')
+    title_frame.pack(fill=tk.X)
 
-    # Use Buy Me A Coffee button image and wrap it in a button
-    bmc_image = tk.PhotoImage(file="default-green.png", master=frm)
-    # Resize the image to fit the button
-    bmc_image = bmc_image.subsample(2, 2)  # Adjust (2, 2) as needed
-    style = ttk.Style()
-    style.theme_use("clam")
-    style.configure("BMC.TButton", relief="flat", borderwidth=0)
-    btn_donate = ttk.Button(
-        frm, image=bmc_image, command=open_donate, style="BMC.TButton"
-    )
-    btn_donate.image = bmc_image  # Prevent garbage collection
-    btn_donate.pack(pady=2)
+    # Create main grid container
+    content_frame = ttk.Frame(main_frame, style='TFrame')
+    content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-    # --- Fix: Use a sub-frame for the top row of buttons ---
-    top_btn_frame = ttk.Frame(frm)
-    top_btn_frame.pack(fill=tk.X, pady=2)
-    btn_tcdd = ttk.Button(top_btn_frame, text="TCDD Sitesine git!", width=20)
-    btn_help = ttk.Button(top_btn_frame, text="Yardım", width=20)
-    btn_tcdd.pack(side=tk.LEFT, padx=2)
-    btn_help.pack(side=tk.LEFT, padx=2)
-    # -------------------------------------------------------
+    # Configure grid weights for responsive layout
+    content_frame.grid_columnconfigure(0, weight=1)  # Left column
+    content_frame.grid_columnconfigure(1, weight=1)  # Right column
+    content_frame.grid_rowconfigure(0, weight=0)     # Route section
+    content_frame.grid_rowconfigure(1, weight=0)     # Ticket type / Date time section
+    content_frame.grid_rowconfigure(2, weight=0)     # Settings / Controls section
+    content_frame.grid_rowconfigure(3, weight=0)     # Author text
+    content_frame.grid_rowconfigure(4, weight=1)     # Log section (expands)
+
+    # Route selection section (Top Left)
+    route_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    route_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
 
     # Nereden/Nereye
     nereden_var = tk.StringVar(value="Eskişehir")
     nereye_var = tk.StringVar(value="Ankara Gar")
-    ttk.Label(frm, text="Nereden :").pack(anchor="w")
-    cmb_nereden = ttk.Combobox(
-        frm, values=Sehirler.sehir_listesi, textvariable=nereden_var
-    )
-    cmb_nereden.pack(fill=tk.X)
-    ttk.Label(frm, text="Nereye :").pack(anchor="w")
-    cmb_nereye = ttk.Combobox(
-        frm, values=Sehirler.sehir_listesi, textvariable=nereye_var
-    )
-    cmb_nereye.pack(fill=tk.X)
+    ttk.Label(route_frame, text="🚂 Rota Seçimi", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+
+    # Use an inner frame with grid to align label and combobox on the same row
+    route_inner = ttk.Frame(route_frame, style='TFrame')
+    route_inner.pack(padx=10, pady=(0, 10), fill='x')
+
+    ttk.Label(route_inner, text="Nereden:").grid(row=0, column=0, sticky='w', padx=(0, 5), pady=2)
+    cmb_nereden = ttk.Combobox(route_inner, values=Sehirler.sehir_listesi, textvariable=nereden_var, width=20)
+    cmb_nereden.grid(row=0, column=1, sticky='ew', pady=2)
+
+    ttk.Label(route_inner, text="Nereye:").grid(row=1, column=0, sticky='w', padx=(0, 5), pady=2)
+    cmb_nereye = ttk.Combobox(route_inner, values=Sehirler.sehir_listesi, textvariable=nereye_var, width=20)
+    cmb_nereye.grid(row=1, column=1, sticky='ew', pady=2)
+
+    # Allow the combobox column to expand for better alignment
+    route_inner.grid_columnconfigure(1, weight=1)
+
+    # Ticket type section (Top Right)
+    ticket_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    ticket_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
 
     # Bilet türü
-    ttk.Label(frm, text="Arama yapılacak bilet türünü seçiniz:").pack(anchor="w")
-    # Ekonomi ve Business
     ekonomi_var = tk.BooleanVar(value=True)
     business_var = tk.BooleanVar(value=False)
+    ttk.Label(ticket_frame, text="🎫 Bilet Türü", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+    ttk.Label(ticket_frame, text="Arama yapılacak bilet türünü seçiniz:").pack(pady=(0, 5))
+    check_frame = ttk.Frame(ticket_frame)
+    check_frame.pack(pady=(0, 10))
+    ttk.Checkbutton(check_frame, text="Ekonomi", variable=ekonomi_var).pack(side=tk.LEFT, padx=(0, 20))
+    ttk.Checkbutton(check_frame, text="Business", variable=business_var).pack(side=tk.LEFT)
 
-    check_frame = ttk.Frame(frm)
-    check_frame.pack(anchor="w")
-    ttk.Checkbutton(check_frame, text="Ekonomi", variable=ekonomi_var).pack(
-        side=tk.LEFT, anchor="w"
-    )
-    ttk.Checkbutton(check_frame, text="Business", variable=business_var).pack(
-        side=tk.LEFT, anchor="w"
-    )
+    # Date and time section (Middle Left)
+    datetime_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    datetime_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
 
     # Takvim ve saat
     tarih_var = tk.StringVar(value=currentDate)
@@ -185,33 +274,28 @@ def main():
     def set_today():
         tarih_var.set(currentDate)
 
-    date_frame = ttk.Frame(frm)
-    date_frame.pack(anchor="w")
+    ttk.Label(datetime_frame, text="📅 Tarih ve Saat", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+    date_frame = ttk.Frame(datetime_frame)
+    date_frame.pack(pady=(0, 10))
+    ttk.Label(date_frame, text="Tarih:").grid(row=0, column=0, sticky='w', padx=(0, 5))
+    date_entry = DateEntry(date_frame, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=12)
+    date_entry.grid(row=0, column=1, padx=(0, 10))
+    ttk.Button(date_frame, text="Bugün", command=set_today).grid(row=0, column=2)
+    ttk.Label(date_frame, text="Saat:").grid(row=1, column=0, sticky='w', padx=(0, 5), pady=(5, 0))
+    ttk.Entry(date_frame, textvariable=saat_var, width=12).grid(row=1, column=1, padx=(0, 10), pady=(5, 0))
+    ttk.Label(date_frame, text="Örnek: 12:30").grid(row=1, column=2, pady=(5, 0))
 
-    # Takvim ve saat ayni satirda
-    ttk.Label(date_frame, text="Tarih:").pack(side=tk.LEFT)
-    date_entry = DateEntry(
-        date_frame, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=10
-    )
-    date_entry.pack(side=tk.LEFT, padx=5)
-    ttk.Button(date_frame, text="Bugün", command=set_today).pack(side=tk.LEFT, padx=5)
-    ttk.Label(date_frame, text="Saat:").pack(side=tk.LEFT)
-    ttk.Entry(date_frame, textvariable=saat_var, width=10).pack(side=tk.LEFT, padx=5)
-    ttk.Label(date_frame, text="Örnek: 12:30").pack(side=tk.LEFT, padx=5)
-
-    # Add seperator
-    ttk.Separator(frm, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=5)
+    # Search frequency section (Middle Right)
+    frequency_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    frequency_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
 
     # Arama sıklığı
-    ttk.Label(frm, text="Arama Sıklığını seçiniz:").pack(anchor="w")
     delay_time_var = tk.IntVar(value=1)
-    ttk.Scale(frm, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(
-        fill=tk.X
-    )
-
-    # Update scale value on change through a label
-    delay_time_label = ttk.Label(frm, text=f"{delay_time_var.get()} dakika")
-    delay_time_label.pack(anchor="w")
+    ttk.Label(frequency_frame, text="⏱️ Arama Sıklığı", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+    ttk.Label(frequency_frame, text="Arama sıklığını seçiniz:").pack(pady=(0, 5))
+    ttk.Scale(frequency_frame, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(fill=tk.X, padx=10, pady=(0, 5))
+    delay_time_label = ttk.Label(frequency_frame, text=f"{delay_time_var.get()} dakika")
+    delay_time_label.pack(pady=(0, 10))
 
     def update_delay_time_label(value):
         delay_time_label.config(text=f"{int(float(value))} dakika")
@@ -227,48 +311,121 @@ def main():
             initialvalue=delay_time_var.get(),
             minvalue=1,
             maxvalue=30,
-            parent=frm,
+            parent=frequency_frame,
         ),
     )
 
-    # Telegram
+    # Settings section (Bottom Left)
+    settings_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    settings_frame.grid(row=2, column=0, sticky='nsew', padx=5, pady=5)
+
+    # Telegram and sound settings
     telegram_msg_var = tk.BooleanVar(value=False)
-    ttk.Label(frm, text="Telegram Ayarlari: (Opsiyonel)").pack(anchor="w")
-    ttk.Checkbutton(
-        frm, text="Bilet bulunursa telegram mesaji gönder!", variable=telegram_msg_var
-    ).pack(anchor="w")
     bot_token_var = tk.StringVar()
     chat_id_var = tk.StringVar()
-    ttk.Label(frm, text="Telegram Bot Token:").pack(anchor="w")
-    bot_token_entry = ttk.Entry(frm, textvariable=bot_token_var, width=30).pack(
-        anchor="w"
-    )
-    ttk.Label(frm, text="Telegram Chat ID:").pack(anchor="w")
-    chat_id_entry = ttk.Entry(frm, textvariable=chat_id_var, width=30).pack(anchor="w")
-
-    # Ses
     ses_var = tk.BooleanVar(value=True)
-    ttk.Label(frm, text="Ses Ayarlari: (Opsiyonel)").pack(anchor="w")
-    ttk.Checkbutton(frm, text="Bilet bulunursa ses çal!", variable=ses_var).pack(
-        anchor="w"
-    )
 
-    # --- Fix: Use a sub-frame for the bottom row of buttons ---
-    bottom_btn_frame = ttk.Frame(frm)
-    bottom_btn_frame.pack(fill=tk.X, pady=2)
-    btn_start = ttk.Button(bottom_btn_frame, text="Aramaya Başla")
-    btn_stop = ttk.Button(bottom_btn_frame, text="Durdur!", state=tk.DISABLED)
-    btn_close = ttk.Button(bottom_btn_frame, text="Kapat!", command=root.destroy)
-    btn_toggle = ttk.Button(bottom_btn_frame, text="↓")
-    btn_start.pack(side=tk.LEFT, padx=2)
-    btn_stop.pack(side=tk.LEFT, padx=2)
-    btn_close.pack(side=tk.LEFT, padx=2)
-    btn_toggle.pack(side=tk.LEFT, padx=2)
-    # ---------------------------------------------------------
+    ttk.Label(settings_frame, text="📢 Bildirim Ayarları", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
 
-    # Log
-    log_text = ScrolledText(frm, width=32, height=8, state=tk.NORMAL)
-    log_text.pack(fill=tk.BOTH, expand=True, pady=5)
+    # Telegram settings
+    ttk.Label(settings_frame, text="Telegram (Opsiyonel):").pack(anchor="w", padx=10, pady=(5, 2))
+    ttk.Checkbutton(settings_frame, text="Bilet bulunursa mesaj gönder", variable=telegram_msg_var).pack(anchor="w", padx=20)
+    ttk.Label(settings_frame, text="Bot Token:").pack(anchor="w", padx=10, pady=(5, 2))
+    bot_token_entry = ttk.Entry(settings_frame, textvariable=bot_token_var, width=25)
+    bot_token_entry.pack(padx=10, pady=(0, 5))
+    ttk.Label(settings_frame, text="Chat ID:").pack(anchor="w", padx=10, pady=(5, 2))
+    chat_id_entry = ttk.Entry(settings_frame, textvariable=chat_id_var, width=25)
+    chat_id_entry.pack(padx=10, pady=(0, 10))
+
+    # Sound settings
+    ttk.Label(settings_frame, text="Ses (Opsiyonel):").pack(anchor="w", padx=10, pady=(5, 2))
+    ttk.Checkbutton(settings_frame, text="Bilet bulunursa ses çal", variable=ses_var).pack(anchor="w", padx=20, pady=(0, 10))
+
+    # Control buttons section (Bottom Right)
+    control_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    control_frame.grid(row=2, column=1, sticky='nsew', padx=5, pady=5)
+
+    ttk.Label(control_frame, text="🎮 Kontrol Paneli", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 10))
+
+    # Main control buttons
+    main_buttons_frame = ttk.Frame(control_frame, style='TFrame')
+    main_buttons_frame.pack(pady=(0, 10))
+    btn_start = ttk.Button(main_buttons_frame, text="🔍 Başla", style='Start.TButton', width=12)
+    btn_stop = ttk.Button(main_buttons_frame, text="⏹️ Durdur", state=tk.DISABLED, style='Stop.TButton', width=10)
+    btn_start.pack(side=tk.LEFT, padx=5)
+    btn_stop.pack(side=tk.LEFT, padx=5)
+
+    # Action buttons
+    action_buttons_frame = ttk.Frame(control_frame, style='TFrame')
+    action_buttons_frame.pack(pady=(0, 10))
+    btn_tcdd = ttk.Button(action_buttons_frame, text="🌐 TCDD Sitesi", width=12)
+    btn_help = ttk.Button(action_buttons_frame, text="❓ Yardım", width=10)
+
+    btn_tcdd.pack(side=tk.LEFT, padx=5)
+    btn_help.pack(side=tk.LEFT, padx=5)
+
+    
+    # Secondary buttons
+    secondary_buttons_frame = ttk.Frame(control_frame, style='TFrame')
+    secondary_buttons_frame.pack(pady=(0, 10))
+    btn_toggle = ttk.Button(secondary_buttons_frame, text="🔄 LOG'ları göster", width=15, style='TButton')
+    btn_close = ttk.Button(secondary_buttons_frame, text="❌ Kapat", command=root.destroy, style='Close.TButton', width=10)
+    btn_close.pack(side=tk.LEFT, padx=5)
+    btn_toggle.pack(side=tk.LEFT, padx=5)
+
+    # Donate button on separate line
+    def open_donate():
+        wbopen("https://www.buymeacoffee.com/mcagriaksoy")
+
+    donate_frame = ttk.Frame(control_frame, style='TFrame')
+    donate_frame.pack(pady=(0, 10))
+
+    try:
+        bmc_image = tk.PhotoImage(file="donate.jpg", master=donate_frame)
+        bmc_image = bmc_image.subsample(2, 2)  # Smaller size
+        style.configure("BMC.TButton", relief="flat", borderwidth=0, background='#f8f9fa')
+        btn_donate = ttk.Button(
+            donate_frame, image=bmc_image, command=open_donate, style="BMC.TButton"
+        )
+        btn_donate.image = bmc_image  # Prevent garbage collection
+        btn_donate.pack()
+    except Exception:
+        # If image not found, create a text button instead
+        btn_donate = ttk.Button(
+            donate_frame, text="☕ Donate", command=open_donate, style="TButton"
+        )
+        btn_donate.pack()
+
+    # Author text before log section
+    author_frame = ttk.Frame(content_frame, style='TFrame')
+    author_frame.grid(row=3, column=0, columnspan=2, sticky='ew', padx=5, pady=(10, 5))
+    # Loader (hidden by default) - placed before the author text to indicate background processing
+    loader_frame = ttk.Frame(author_frame, style='TFrame')
+    loader_frame.pack(side=tk.TOP, fill='x')
+    loader = ttk.Progressbar(loader_frame, mode='indeterminate')
+    # Don't pack the loader yet; it'll be packed when active
+
+    author_label = ttk.Label(author_frame, text="Mehmet C. Aksoy 2022-2025 Tarafından Geliştirildi. Tüm hakları saklıdır.",
+                            font=('Segoe UI', 8), foreground='#6c757d')
+    author_label.pack(anchor='center')
+
+    # Log section (Full width bottom)
+    log_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
+    log_frame.grid(row=4, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
+
+    ttk.Label(log_frame, text="📋 Arama Logları", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+    log_text = ScrolledText(log_frame, height=8, state=tk.NORMAL, font=('Consolas', 9))
+    log_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+
+    # Thread-safe GUI logging helper
+    def gui_log(msg):
+        try:
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            root.after(0, lambda: log_text.insert(tk.END, f"[{ts}] {msg}\n"))
+            root.after(0, lambda: log_text.see(tk.END))
+        except Exception:
+            # best-effort, do not crash background thread
+            pass
 
     # Event handlers
     def on_start():
@@ -316,19 +473,130 @@ def main():
             return
         chat_id = chat_id_var.get()
         ses = ses_var.get()
-        btn_start.config(state=tk.DISABLED)
-        btn_stop.config(state=tk.NORMAL)
-        log_text.insert(tk.END, "Arama başladı. Lütfen bekleyin...\n")
+        btn_start.config(state=tk.DISABLED, style='Disabled.TButton')
+        btn_stop.config(state=tk.NORMAL, style='Stop.TButton')
+        gui_log("Arama başladı. Lütfen bekleyin...")
+
+        # Show and start the loader in a thread-safe way
+        def _show_loader():
+            try:
+                loader.pack(fill='x', padx=5, pady=(0, 5))
+                loader.start(10)
+            except Exception:
+                pass
+
+        root.after(0, _show_loader)
 
         def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
             global g_isStopped
             g_isStopped = False
+            attempt = 0
             while True:
+                if g_isStopped:
+                    gui_log("Kullanıcı tarafından durduruldu (döngü başlangıcında).")
+                    break
+                attempt += 1
+                gui_log(f"Başlangıç döngüsü: deneme #{attempt}")
                 driver = driver_setting()
-                driver_get(driver)
-                route(driver, nereden, nereye, tarih)
-                control(driver, saat, delay_time, telegram_msg, bot_token, chat_id, ses)
-                sleep(30)
+                if driver is None:
+                    gui_log("HATA: Tarayıcı başlatılamadı! Lütfen Edge tarayıcısının yüklü olduğundan emin olun.")
+                    btn_start.config(state=tk.NORMAL)
+                    btn_stop.config(state=tk.DISABLED)
+                    break
+
+                if g_isStopped:
+                    gui_log("Durduruldu (sayfa yüklemeden önce).")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break
+                # driver_get with exception handling
+                try:
+                    gui_log("Sayfa yükleme başlıyor...")
+                    driver_get(driver)
+                    gui_log("Sayfa yüklendi başarılı.")
+                except InvalidSessionIdException as ise:
+                    gui_log(f"InvalidSessionIdException during driver_get: {ise}")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break  # Kill the thread on exception
+                except Exception as e:
+                    gui_log(f"Hata: sayfa yüklenemedi: {e}")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break  # Kill the thread on exception
+
+                if g_isStopped:
+                    gui_log("Durduruldu (rota girişinden önce).")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break
+                # route with exception handling
+                try:
+                    gui_log(f"Rota bilgileri giriliyor: {nereden} -> {nereye} {tarih}")
+                    route(driver, nereden, nereye, tarih)
+                    gui_log("Rota bilgileri girildi.")
+                except InvalidSessionIdException as ise:
+                    gui_log(f"InvalidSessionIdException during route: {ise}")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break  # Kill the thread on exception
+                except Exception as e:
+                    gui_log(f"Rota işlemi sırasında hata: {e}")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break  # Kill the thread on exception
+
+                if g_isStopped:
+                    gui_log("Durduruldu (kontrol öncesi).")
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    break
+                # control with exception handling
+                try:
+                    gui_log(f"Kontrol başlıyor: Saat={saat}, Bekleme={delay_time} dakika")
+                    control(driver, saat, delay_time, telegram_msg, bot_token, chat_id, ses)
+                    gui_log("Kontrol tamamlandı.")
+                except InvalidSessionIdException as ise:
+                    gui_log(f"InvalidSessionIdException during control: {ise}")
+                    driver.quit()
+                except Exception as e:
+                    gui_log(f"Kontrol sırasında hata: {e}")
+                    driver.quit()
+
+                gui_log(f"Bekleniyor: {delay_time} dakika sonra tekrar denenecek.")
+                # Replace single sleep with loop to check g_isStopped every second
+                for _ in range(delay_time * 60):
+                    if g_isStopped:
+                        gui_log("Bekleme sırasında durduruldu.")
+                        driver.quit()
+                        break
+                    sleep(1)
+
+            # When the background loop exits (either stopped or finished), stop the loader and restore buttons
+            def _hide_loader_and_restore():
+                try:
+                    loader.stop()
+                    loader.pack_forget()
+                except Exception:
+                    pass
+                btn_start.config(state=tk.NORMAL)
+                btn_stop.config(state=tk.DISABLED)
+
+            root.after(0, _hide_loader_and_restore)
 
         t1 = Thread(
             target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses)
@@ -336,11 +604,17 @@ def main():
         t1.start()
 
     def on_stop():
-        btn_start.config(state=tk.NORMAL)
-        btn_stop.config(state=tk.DISABLED)
+        btn_start.config(state=tk.NORMAL, style='Start.TButton')
+        btn_stop.config(state=tk.DISABLED, style='Disabled.TButton')
         global g_isStopped
         g_isStopped = True
         log_text.delete(1.0, tk.END)
+        # Hide and stop loader when user presses stop
+        try:
+            loader.stop()
+            loader.pack_forget()
+        except Exception:
+            pass
 
     def on_help():
         if messagebox.askyesno("Yardım", "Yardım sayfasına gitmek ister misiniz?"):
@@ -355,10 +629,10 @@ def main():
 
     def on_toggle():
         if root.geometry().startswith(f"{FULL_SIZE[0]}x{FULL_SIZE[1]}"):
-            btn_toggle.config(text="↓")
+            btn_toggle.config(text="🔄 Genişlet/Daralt")
             root.geometry(f"{HALF_SIZE[0]}x{HALF_SIZE[1]}")
         else:
-            btn_toggle.config(text="↑")
+            btn_toggle.config(text="🔄 Genişlet/Daralt")
             root.geometry(f"{FULL_SIZE[0]}x{FULL_SIZE[1]}")
 
     btn_start.config(command=on_start)

@@ -4,14 +4,15 @@ Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 
 from telegram import Bot
 
+
 class TelegramMsg:
-    """ Send a message to your Telegram bot when the event occurs. """
+    """Send a message to your Telegram bot when the event occurs."""
 
     def __init__(self):
         pass
 
     def check_telegram_bot_status(self, bot_token):
-        ''' Check the status of your Telegram bot. '''
+        """Check the status of your Telegram bot."""
         try:
             bot = Bot(token=bot_token)
             bot.get_me()
@@ -21,7 +22,7 @@ class TelegramMsg:
             return False
 
     def send_telegram_message(self, bot_token, chat_id):
-        ''' Send a message to your Telegram bot when the event occurs.'''
+        """Send a message to your Telegram bot when the event occurs."""
         bot = Bot(token=bot_token)
         try:
             bot = Bot(token=bot_token)

@@ -1,0 +1,34 @@
+# UTF-8
+#
+# For use with PyInstaller --version-file option
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(4, 0, 0, 0),
+    prodvers=(4, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x4,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+    ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [
+          StringStruct('CompanyName', 'github.com/mcagriaksoy'),
+          StringStruct('FileDescription', 'TCDD Bilet Kontrol Etme (Yer Bulma) Uygulaması'),
+          StringStruct('FileVersion', '4.0.0'),
+          StringStruct('InternalName', 'SafePDF'),
+          StringStruct('LegalCopyright', 'Copyright (C) 2025 mcagriaksoy'),
+          StringStruct('LegalTrademarks', ''),
+          StringStruct('OriginalFilename', 'TCDD.Bilet.Bulma.Botu_v4_0_win64.exe'),
+          StringStruct('ProductName', 'SafePDF'),
+          StringStruct('ProductVersion', '4.0.0'),
+          StringStruct('License', 'GPL-V3.0')
+        ])
+      ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)

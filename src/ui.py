@@ -10,12 +10,13 @@ from datetime import date, datetime
 from time import sleep
 from threading import Thread
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog, filedialog
+from tkinter import ttk, messagebox, simpledialog
 from tkinter.scrolledtext import ScrolledText
 from tkcalendar import DateEntry
 
 import error_codes as ErrCodes
 from webbrowser import open as wbopen
+
 if platform.system() == "Windows":
     import winsound
 
@@ -30,6 +31,7 @@ g_isStopped = False
 
 FULL_SIZE = (310, 777)
 HALF_SIZE = (310, 647)
+
 
 def main():
     def driver_setting():
@@ -63,9 +65,14 @@ def main():
                     print(f"Failed to play sound: {e}")
             if telegram_msg:
                 TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
-            messagebox.showinfo("Bilet Bulundu", "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️")
+            messagebox.showinfo(
+                "Bilet Bulundu",
+                "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️",
+            )
         elif response == ErrCodes.TEKRAR_DENE:
-            log_text.insert(tk.END, f"\n{delay_time} Dakika icerisinde tekrar denenecek...")
+            log_text.insert(
+                tk.END, f"\n{delay_time} Dakika icerisinde tekrar denenecek..."
+            )
             driver.quit()
         elif response == ErrCodes.TIMEOUT_HATASI:
             delay_time = 0
@@ -95,10 +102,13 @@ def main():
                 if f.read() == "1":
                     return
 
-        messagebox.showinfo("Hoşgeldiniz", "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!")
+        messagebox.showinfo(
+            "Hoşgeldiniz",
+            "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
+        )
         # Set a flag to indicate that the message has been shown
         # Create a file to store the flag on temp directory
-        
+
         if not os.path.exists(temp_dir):
             with open(temp_dir, "w") as f:
                 f.write("1")
@@ -116,7 +126,7 @@ def main():
 
     def open_donate():
         wbopen("https://www.buymeacoffee.com/mcagriaksoy")
-    
+
     # Use Buy Me A Coffee button image and wrap it in a button
     bmc_image = tk.PhotoImage(file="default-green.png", master=frm)
     # Resize the image to fit the button
@@ -124,7 +134,9 @@ def main():
     style = ttk.Style()
     style.theme_use("clam")
     style.configure("BMC.TButton", relief="flat", borderwidth=0)
-    btn_donate = ttk.Button(frm, image=bmc_image, command=open_donate, style="BMC.TButton")
+    btn_donate = ttk.Button(
+        frm, image=bmc_image, command=open_donate, style="BMC.TButton"
+    )
     btn_donate.image = bmc_image  # Prevent garbage collection
     btn_donate.pack(pady=2)
 
@@ -141,10 +153,14 @@ def main():
     nereden_var = tk.StringVar(value="Eskişehir")
     nereye_var = tk.StringVar(value="Ankara Gar")
     ttk.Label(frm, text="Nereden :").pack(anchor="w")
-    cmb_nereden = ttk.Combobox(frm, values=Sehirler.sehir_listesi, textvariable=nereden_var)
+    cmb_nereden = ttk.Combobox(
+        frm, values=Sehirler.sehir_listesi, textvariable=nereden_var
+    )
     cmb_nereden.pack(fill=tk.X)
     ttk.Label(frm, text="Nereye :").pack(anchor="w")
-    cmb_nereye = ttk.Combobox(frm, values=Sehirler.sehir_listesi, textvariable=nereye_var)
+    cmb_nereye = ttk.Combobox(
+        frm, values=Sehirler.sehir_listesi, textvariable=nereye_var
+    )
     cmb_nereye.pack(fill=tk.X)
 
     # Bilet türü
@@ -155,8 +171,12 @@ def main():
 
     check_frame = ttk.Frame(frm)
     check_frame.pack(anchor="w")
-    ttk.Checkbutton(check_frame, text="Ekonomi", variable=ekonomi_var).pack(side=tk.LEFT, anchor="w")
-    ttk.Checkbutton(check_frame, text="Business", variable=business_var).pack(side=tk.LEFT, anchor="w")
+    ttk.Checkbutton(check_frame, text="Ekonomi", variable=ekonomi_var).pack(
+        side=tk.LEFT, anchor="w"
+    )
+    ttk.Checkbutton(check_frame, text="Business", variable=business_var).pack(
+        side=tk.LEFT, anchor="w"
+    )
 
     # Takvim ve saat
     tarih_var = tk.StringVar(value=currentDate)
@@ -167,10 +187,12 @@ def main():
 
     date_frame = ttk.Frame(frm)
     date_frame.pack(anchor="w")
-    
+
     # Takvim ve saat ayni satirda
     ttk.Label(date_frame, text="Tarih:").pack(side=tk.LEFT)
-    date_entry = DateEntry(date_frame, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=10)
+    date_entry = DateEntry(
+        date_frame, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=10
+    )
     date_entry.pack(side=tk.LEFT, padx=5)
     ttk.Button(date_frame, text="Bugün", command=set_today).pack(side=tk.LEFT, padx=5)
     ttk.Label(date_frame, text="Saat:").pack(side=tk.LEFT)
@@ -183,33 +205,53 @@ def main():
     # Arama sıklığı
     ttk.Label(frm, text="Arama Sıklığını seçiniz:").pack(anchor="w")
     delay_time_var = tk.IntVar(value=1)
-    ttk.Scale(frm, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(fill=tk.X)
+    ttk.Scale(frm, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(
+        fill=tk.X
+    )
 
     # Update scale value on change through a label
     delay_time_label = ttk.Label(frm, text=f"{delay_time_var.get()} dakika")
     delay_time_label.pack(anchor="w")
+
     def update_delay_time_label(value):
         delay_time_label.config(text=f"{int(float(value))} dakika")
-    delay_time_var.trace_add("write", lambda *args: update_delay_time_label(delay_time_var.get()))
-    delay_time_label.bind("<Button-1>", lambda e: simpledialog.askinteger("Arama Sıklığı", "Arama sıklığını seçiniz (dakikada bir):", initialvalue=delay_time_var.get(), minvalue=1, maxvalue=30, parent=frm))
 
+    delay_time_var.trace_add(
+        "write", lambda *args: update_delay_time_label(delay_time_var.get())
+    )
+    delay_time_label.bind(
+        "<Button-1>",
+        lambda e: simpledialog.askinteger(
+            "Arama Sıklığı",
+            "Arama sıklığını seçiniz (dakikada bir):",
+            initialvalue=delay_time_var.get(),
+            minvalue=1,
+            maxvalue=30,
+            parent=frm,
+        ),
+    )
 
     # Telegram
     telegram_msg_var = tk.BooleanVar(value=False)
     ttk.Label(frm, text="Telegram Ayarlari: (Opsiyonel)").pack(anchor="w")
-    ttk.Checkbutton(frm, text="Bilet bulunursa telegram mesaji gönder!", variable=telegram_msg_var).pack(anchor="w")
+    ttk.Checkbutton(
+        frm, text="Bilet bulunursa telegram mesaji gönder!", variable=telegram_msg_var
+    ).pack(anchor="w")
     bot_token_var = tk.StringVar()
     chat_id_var = tk.StringVar()
     ttk.Label(frm, text="Telegram Bot Token:").pack(anchor="w")
-    bot_token_entry = ttk.Entry(frm, textvariable=bot_token_var, width=30).pack(anchor="w")
+    bot_token_entry = ttk.Entry(frm, textvariable=bot_token_var, width=30).pack(
+        anchor="w"
+    )
     ttk.Label(frm, text="Telegram Chat ID:").pack(anchor="w")
     chat_id_entry = ttk.Entry(frm, textvariable=chat_id_var, width=30).pack(anchor="w")
-
 
     # Ses
     ses_var = tk.BooleanVar(value=True)
     ttk.Label(frm, text="Ses Ayarlari: (Opsiyonel)").pack(anchor="w")
-    ttk.Checkbutton(frm, text="Bilet bulunursa ses çal!", variable=ses_var).pack(anchor="w")
+    ttk.Checkbutton(frm, text="Bilet bulunursa ses çal!", variable=ses_var).pack(
+        anchor="w"
+    )
 
     # --- Fix: Use a sub-frame for the bottom row of buttons ---
     bottom_btn_frame = ttk.Frame(frm)
@@ -260,17 +302,24 @@ def main():
         telegram_msg = telegram_msg_var.get()
         if telegram_msg:
             if not bot_token_var.get() or not chat_id_var.get():
-                messagebox.showwarning("Uyarı", "Telegram bot token ve chat id bilgilerini giriniz!")
+                messagebox.showwarning(
+                    "Uyarı", "Telegram bot token ve chat id bilgilerini giriniz!"
+                )
                 return
         bot_token = bot_token_var.get()
-        if bot_token and not TelegramMsg.TelegramMsg().check_telegram_bot_status(bot_token):
-            messagebox.showwarning("Uyarı", "Telegram bot token bilgisi hatali! kontrol ediniz!")
+        if bot_token and not TelegramMsg.TelegramMsg().check_telegram_bot_status(
+            bot_token
+        ):
+            messagebox.showwarning(
+                "Uyarı", "Telegram bot token bilgisi hatali! kontrol ediniz!"
+            )
             return
         chat_id = chat_id_var.get()
         ses = ses_var.get()
         btn_start.config(state=tk.DISABLED)
         btn_stop.config(state=tk.NORMAL)
         log_text.insert(tk.END, "Arama başladı. Lütfen bekleyin...\n")
+
         def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
             global g_isStopped
             g_isStopped = False
@@ -280,7 +329,10 @@ def main():
                 route(driver, nereden, nereye, tarih)
                 control(driver, saat, delay_time, telegram_msg, bot_token, chat_id, ses)
                 sleep(30)
-        t1 = Thread(target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses))
+
+        t1 = Thread(
+            target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses)
+        )
         t1.start()
 
     def on_stop():
@@ -295,7 +347,10 @@ def main():
             wbopen("https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol")
 
     def on_tcdd():
-        messagebox.showinfo("Bilgi", "TCDD Bilet Satış Sitesine yönlendiriliyorsunuz. Lütfen bekleyin...")
+        messagebox.showinfo(
+            "Bilgi",
+            "TCDD Bilet Satış Sitesine yönlendiriliyorsunuz. Lütfen bekleyin...",
+        )
         wbopen("https://ebilet.tcddtasimacilik.gov.tr")
 
     def on_toggle():
@@ -313,6 +368,7 @@ def main():
     btn_toggle.config(command=on_toggle)
 
     root.mainloop()
+
 
 def __main__():
     main()

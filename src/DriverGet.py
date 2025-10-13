@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class DriverGet:
-    ''' Driver'ı alır ve sayfayı yükler.'''
+    """Driver'ı alır ve sayfayı yükler."""
 
     def __init__(self, driver, url="https://ebilet.tcddtasimacilik.gov.tr"):
         if driver is None:
@@ -20,8 +20,14 @@ class DriverGet:
         self.driver = driver
 
     def driver_get(self):
-        ''' Driver'ı alır ve sayfayı yükler.'''
+        """Driver'ı alır ve sayfayı yükler."""
         self.driver.get(self.url)
-        WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(
-            (By.CSS_SELECTOR, "body > div > main > section.homePageSearchArea > div > div > div")))
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    "body > div > main > section.homePageSearchArea > div > div > div",
+                )
+            )
+        )
         sys.stdout.write("Sayfa yüklendi...")

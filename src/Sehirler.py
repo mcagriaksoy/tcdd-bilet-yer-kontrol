@@ -54,6 +54,7 @@ sehir_listesi = [
     "Bağıştaş",
     "Beyhan",
     "Beylikova",
+    "Bilecik YHT",
     "Bostankaya",
     "Bozkanat",
     "Boğazköprü",

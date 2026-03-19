@@ -4,643 +4,809 @@ Base version @author: Birol Emekli, https://github.com/bymcs
 Enhanced (Forked) version @author: Mehmet C. Aksoy https://github.com/mcagriaksoy
 """
 
+import json
 import os
 import platform
-from datetime import date, datetime
-from time import sleep
-from threading import Thread
+import re
+import sys
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from datetime import date, datetime
+from threading import Thread
+from time import sleep
+from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
-from tkcalendar import DateEntry
-from selenium.common.exceptions import InvalidSessionIdException
-
-import error_codes as ErrCodes
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from webbrowser import open as wbopen
+
+from selenium.common.exceptions import InvalidSessionIdException
+from tkcalendar import DateEntry
+
+import Control
+import DriverGet
+import DriverSetting
+import Rota
+import Sehirler
+import TelegramMsg
+import error_codes as ErrCodes
 
 if platform.system() == "Windows":
     import winsound
+
     try:
         from win10toast import ToastNotifier
+
         toast_available = True
     except ImportError:
         toast_available = False
 else:
     toast_available = False
 
-import Control
-import DriverGet
-import DriverSetting
-import Sehirler
-import Rota
-import TelegramMsg
+GITHUB_RELEASES_URL = "https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases"
+GITHUB_LATEST_API = (
+    "https://api.github.com/repos/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/latest"
+)
+APP_SIZE = (980, 820)
+COMPACT_SIZE = (980, 660)
+APP_BG = "#eef3f8"
+CARD_BG = "#ffffff"
+ACCENT = "#0f5f9c"
+ACCENT_SOFT = "#d9ebf8"
+TEXT_MAIN = "#17324d"
+TEXT_MUTED = "#5d7186"
+DANGER = "#b54646"
+BORDER = "#d4dee8"
 
 g_isStopped = False
 
-FULL_SIZE = (540, 760)
-HALF_SIZE = (540, 560)
+
+def resource_path(*parts):
+    base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_dir, *parts)
+
+
+def read_current_version():
+    version_file = os.path.join(os.getcwd(), "version.txt")
+    try:
+        with open(version_file, "r", encoding="utf-8") as file:
+            content = file.read()
+        match = re.search(r"FileVersion',\s*'([^']+)'", content)
+        if match:
+            return match.group(1)
+    except OSError:
+        pass
+    return "4.1.0"
+
+
+def parse_version_tuple(raw_version):
+    numbers = [int(piece) for piece in re.findall(r"\d+", raw_version)]
+    return tuple(numbers[:4]) if numbers else (0,)
+
+
+def fetch_latest_release_info():
+    request = Request(
+        GITHUB_LATEST_API,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "tcdd-bilet-yer-kontrol",
+        },
+    )
+    with urlopen(request, timeout=8) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+
+    tag_name = payload.get("tag_name", "").strip() or "Bilinmiyor"
+    return {
+        "tag_name": tag_name,
+        "version": ".".join(re.findall(r"\d+", tag_name)) or tag_name,
+        "html_url": payload.get("html_url", GITHUB_RELEASES_URL),
+        "published_at": payload.get("published_at", ""),
+    }
+
+
+def center_geometry(root, width, height):
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    center_x = int((screen_width - width) / 2)
+    center_y = int((screen_height - height) / 2)
+    root.geometry(f"{width}x{height}+{center_x}+{center_y}")
 
 
 def main():
+    current_version = read_current_version()
+
     def driver_setting():
-        # ...existing code...
         return DriverSetting.DriverSetting().driver_init()
 
     def driver_get(drivers):
-        # ...existing code...
         DriverGet.DriverGet(drivers).driver_get()
 
     def route(driver, first_location, last_location, date_):
-        # ...existing code...
         global g_isStopped
-        isError = Rota.Rota(driver, first_location, last_location, date_).dataInput()
-        if isError == -1 or g_isStopped:
-            btn_start.config(state=tk.NORMAL)
-            btn_stop.config(state=tk.DISABLED)
-            driver.quit()
-            return
+        is_error = Rota.Rota(driver, first_location, last_location, date_).dataInput()
+        if is_error == -1 or g_isStopped:
+            safe_driver_quit(driver)
+            return False
+        return True
 
-    def control(driver, time, delay_time, telegram_msg, bot_token, chat_id, ses):
-        # ...existing code...
-        response = Control.Control(driver, time).sayfa_kontrol()
+    def control(
+        driver,
+        time_text,
+        delay_time,
+        telegram_msg,
+        bot_token,
+        chat_id,
+        ses,
+        allow_economy,
+        allow_business,
+    ):
+        response = Control.Control(
+            driver,
+            time_text,
+            allow_economy=allow_economy,
+            allow_business=allow_business,
+        ).sayfa_kontrol()
         if response == ErrCodes.BASARILI:
             if ses:
-                try:
-                    for _ in range(5):  # Play the sound 5 times
-                        winsound.Beep(1000, 500)  # Frequency: 1000 Hz, Duration: 500 ms
-                        sleep(0.1)  # Short delay between beeps
-                except Exception as e:
-                    print(f"Failed to play sound: {e}")
+                play_sound()
             if telegram_msg:
-                TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
-            
-            # Show Windows toast notification if available
-            if toast_available:
-                try:
-                    toaster = ToastNotifier()
-                    toaster.show_toast(
-                        "TCDD Bilet Bulundu!",
-                        "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️",
-                        icon_path=None,
-                        duration=10,
-                        threaded=True
-                    )
-                except Exception as e:
-                    print(f"Failed to show toast notification: {e}")
-            
-            messagebox.showinfo(
-                "Bilet Bulundu",
-                "Hey Orada mısın? Biletin bulundu. Satın alabilirsin ❤️❤️❤️❤️",
+                sent = TelegramMsg.TelegramMsg().send_telegram_message(bot_token, chat_id)
+                if not sent:
+                    append_log("Telegram bildirimi gönderilemedi.")
+
+            show_toast_notification()
+            safe_driver_quit(driver)
+            root.after(
+                0,
+                lambda: messagebox.showinfo(
+                    "Bilet Bulundu",
+                    "Bilet bulundu. TCDD sitesine gidip satın alma işlemini tamamlayabilirsiniz.",
+                ),
             )
         elif response == ErrCodes.TEKRAR_DENE:
-            log_text.insert(
-                tk.END, f"\n{delay_time} Dakika icerisinde tekrar denenecek..."
-            )
-            driver.quit()
+            append_log(f"{delay_time} dakika sonra tekrar denenecek.")
+            safe_driver_quit(driver)
         elif response == ErrCodes.TIMEOUT_HATASI:
-            delay_time = 0
-            driver.quit()
+            safe_driver_quit(driver)
         else:
-            btn_start.config(state=tk.NORMAL)
-            btn_stop.config(state=tk.DISABLED)
+            safe_driver_quit(driver)
+        return response
 
-    # GUI Ayarlari
-    today = date.today()
-    currentDate = today.strftime("%d.%m.%Y")
-    day, month, year = currentDate.split(".")
-    now = datetime.now()
-    currentTime = now.strftime("%H:%M")
+    def play_sound():
+        if platform.system() != "Windows":
+            return
+        try:
+            for _ in range(4):
+                winsound.Beep(1100, 350)
+                sleep(0.1)
+        except Exception:
+            append_log("Ses bildirimi çalınamadı.")
+
+    def show_toast_notification():
+        if not toast_available:
+            return
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast(
+                "TCDD Bilet Bulundu",
+                "Bilet bulundu. Satın alma işlemini tamamlayabilirsiniz.",
+                duration=8,
+                threaded=True,
+            )
+        except Exception:
+            append_log("Masaüstü bildirimi gösterilemedi.")
+
+    def safe_driver_quit(driver):
+        if not driver:
+            return
+        try:
+            DriverSetting.cleanup_webdriver_runtime(driver)
+        except Exception:
+            pass
+
+    def normalize_date_text(raw_text):
+        return raw_text.replace("/", ".").replace("-", ".").strip()
+
+    def normalize_time_text(raw_text):
+        return raw_text.replace(".", ":").replace(",", ":").strip()
+
+    def validate_form():
+        nereden = nereden_var.get().strip()
+        nereye = nereye_var.get().strip()
+        tarih = normalize_date_text(tarih_var.get())
+        saat = normalize_time_text(saat_var.get())
+        allow_business = business_var.get()
+        allow_economy = ekonomi_var.get()
+
+        if not nereden or not nereye:
+            raise ValueError("Lütfen kalkış ve varış istasyonlarını seçin.")
+        if nereden == nereye:
+            raise ValueError("Kalkış ve varış istasyonları aynı olamaz.")
+        if not (allow_business or allow_economy):
+            raise ValueError("En az bir bilet tipi seçin.")
+        if not tarih:
+            raise ValueError("Lütfen tarih seçin.")
+        if not saat:
+            raise ValueError("Lütfen saat girin.")
+
+        try:
+            datetime.strptime(tarih, "%d.%m.%Y")
+        except ValueError as exc:
+            raise ValueError("Tarih formatı gg.aa.yyyy olmalı.") from exc
+
+        try:
+            datetime.strptime(saat, "%H:%M")
+        except ValueError as exc:
+            raise ValueError("Saat formatı ss:dd olmalı. Örnek: 12:30") from exc
+
+        if telegram_msg_var.get():
+            if not bot_token_var.get().strip() or not chat_id_var.get().strip():
+                raise ValueError("Telegram için bot token ve chat id bilgilerini girin.")
+            if not TelegramMsg.TelegramMsg().check_telegram_bot_status(
+                bot_token_var.get().strip()
+            ):
+                raise ValueError("Telegram bot token bilgisi doğrulanamadı.")
+
+        return {
+            "nereden": nereden,
+            "nereye": nereye,
+            "tarih": tarih,
+            "saat": saat,
+            "delay_time": int(delay_time_var.get()),
+            "telegram_msg": telegram_msg_var.get(),
+            "bot_token": bot_token_var.get().strip(),
+            "chat_id": chat_id_var.get().strip(),
+            "ses": ses_var.get(),
+            "allow_business": allow_business,
+            "allow_economy": allow_economy,
+        }
 
     root = tk.Tk()
-    root.title("TCDD Otomatik Bilet Arama (Yer Bulma) Programı - v4.0.0")
+    root.title(f"TCDD Otomatik Bilet Arama Botu")
+    root.configure(bg=APP_BG)
     root.resizable(False, False)
+    try:
+        root.iconbitmap(resource_path("icon.ico"))
+    except tk.TclError:
+        pass
+    center_geometry(root, *APP_SIZE)
+    root.bind("<Escape>", lambda _event: root.destroy())
 
-    # Center the window on screen
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    window_width = HALF_SIZE[0]
-    window_height = HALF_SIZE[1]
-    center_x = int((screen_width - window_width) / 2)
-    center_y = int((screen_height - window_height) / 2)
-    root.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
-
-    # Bind Escape key to close window
-    root.bind('<Escape>', lambda e: root.destroy())
-
-    # Apply modern theme
     style = ttk.Style()
-    style.theme_use('clam')
+    style.theme_use("clam")
 
-    # Configure modern styling
-    style.configure('TFrame', background='#f8f9fa')
-    style.configure('TLabel', background='#f8f9fa', font=('Segoe UI', 9))
-    style.configure('TButton', font=('Segoe UI', 9, 'bold'), padding=6, relief='raised', borderwidth=1)
-    style.configure('TCheckbutton', background='#f8f9fa', font=('Segoe UI', 9))
-    style.configure('TCombobox', font=('Segoe UI', 9))
-    style.configure('TEntry', font=('Segoe UI', 9))
-    style.configure('Card.TLabelframe', background='#ffffff', borderwidth=2, relief='solid', labeloutside=False)
-    style.configure('Card.TLabelframe.Label', background='#ffffff', font=('Segoe UI', 10, 'bold'), foreground='#2c3e50')
-
-    # Button colors and styles
-    style.map('TButton',
-        background=[('active', '#007bff'), ('pressed', '#0056b3')],
-        foreground=[('active', 'white'), ('pressed', 'white')]
+    style.configure(".", background=APP_BG, foreground=TEXT_MAIN, font=("Segoe UI", 10))
+    style.configure("App.TFrame", background=APP_BG)
+    style.configure("CardInner.TFrame", background=CARD_BG)
+    style.configure(
+        "Card.TLabelframe",
+        background=CARD_BG,
+        bordercolor=BORDER,
+        relief="solid",
+        borderwidth=1,
+        padding=14,
+    )
+    style.configure(
+        "Card.TLabelframe.Label",
+        background=CARD_BG,
+        foreground=TEXT_MAIN,
+        font=("Segoe UI Semibold", 11),
+    )
+    style.configure(
+        "Title.TLabel",
+        background=APP_BG,
+        foreground=TEXT_MAIN,
+        font=("Segoe UI Semibold", 21),
+    )
+    style.configure(
+        "Muted.TLabel",
+        background=APP_BG,
+        foreground=TEXT_MUTED,
+        font=("Segoe UI", 10),
+    )
+    style.configure(
+        "Section.TLabel",
+        background=CARD_BG,
+        foreground=TEXT_MUTED,
+        font=("Segoe UI", 9),
+    )
+    style.configure(
+        "CardText.TLabel",
+        background=CARD_BG,
+        foreground=TEXT_MAIN,
+        font=("Segoe UI", 10),
+    )
+    style.configure(
+        "Primary.TButton",
+        background=ACCENT,
+        foreground="white",
+        borderwidth=0,
+        padding=(14, 9),
+        font=("Segoe UI Semibold", 10),
+    )
+    style.map("Primary.TButton", background=[("active", "#0d507f"), ("pressed", "#0a446c")])
+    style.configure(
+        "Ghost.TButton",
+        background=ACCENT_SOFT,
+        foreground=ACCENT,
+        borderwidth=0,
+        padding=(12, 8),
+        font=("Segoe UI", 10),
+    )
+    style.map("Ghost.TButton", background=[("active", "#c8e1f3"), ("pressed", "#bdd9ee")])
+    style.configure(
+        "Danger.TButton",
+        background=DANGER,
+        foreground="white",
+        borderwidth=0,
+        padding=(14, 9),
+        font=("Segoe UI Semibold", 10),
+    )
+    style.map("Danger.TButton", background=[("active", "#9e3d3d"), ("pressed", "#8d3636")])
+    style.configure("TEntry", fieldbackground="#f8fbfd", bordercolor=BORDER, padding=6)
+    style.configure("TCombobox", fieldbackground="#f8fbfd", padding=4)
+    style.configure(
+        "TCheckbutton",
+        background=CARD_BG,
+        foreground=TEXT_MAIN,
+        font=("Segoe UI", 10),
+    )
+    style.configure(
+        "Status.Horizontal.TProgressbar",
+        troughcolor="#dfe7ef",
+        background=ACCENT,
+        thickness=8,
     )
 
-    # Start button - green
-    style.configure('Start.TButton', background='#28a745', foreground='white', font=('Segoe UI', 10, 'bold'))
-    style.map('Start.TButton',
-        background=[('active', '#218838'), ('pressed', '#1e7e34')],
-        foreground=[('active', 'white'), ('pressed', 'white')]
-    )
+    current_date = date.today().strftime("%d.%m.%Y")
+    current_time = datetime.now().strftime("%H:%M")
 
-    # Stop button - red
-    style.configure('Stop.TButton', background='#dc3545', foreground='white', font=('Segoe UI', 10, 'bold'))
-    style.map('Stop.TButton',
-        background=[('active', '#c82333'), ('pressed', '#bd2130')],
-        foreground=[('active', 'white'), ('pressed', 'white')]
-    )
-
-    # Close button - gray
-    style.configure('Close.TButton', background='#6c757d', foreground='white', font=('Segoe UI', 9))
-    style.map('Close.TButton',
-        background=[('active', '#5a6268'), ('pressed', '#545b62')],
-        foreground=[('active', 'white'), ('pressed', 'white')]
-    )
-
-    # Disabled button style - gray for disabled state
-    style.configure('Disabled.TButton', background='#cccccc', foreground='#666666', font=('Segoe UI', 9, 'bold'))
-    style.map('Disabled.TButton',
-        background=[('active', '#cccccc'), ('pressed', '#cccccc')],
-        foreground=[('active', '#666666'), ('pressed', '#666666')]
-    )
-
-    # Welcome popup
-    def show_welcome():
-        # Check if the welcome message has already been shown
-        temp_dir = os.path.join(os.getenv("TEMP"), "cfg.txt")
-        if os.path.exists(temp_dir):
-            with open(temp_dir, "r") as f:
-                if f.read() == "1":
-                    return
-
-        messagebox.showinfo(
-            "Hoşgeldiniz",
-            "Ilk defa kullaniyorsaniz, ilk taramada biraz bekleyebilirsiniz!",
-        )
-        # Set a flag to indicate that the message has been shown
-        # Create a file to store the flag on temp directory
-
-        if not os.path.exists(temp_dir):
-            with open(temp_dir, "w") as f:
-                f.write("1")
-        else:
-            # If the file exists, it means the message has already been shown
-            return
-
-    root.after(100, show_welcome)
-
-    # Main container with modern background
-    main_frame = ttk.Frame(root, style='TFrame')
-    main_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
-
-    # Header section with title and donate button
-    header_frame = ttk.Frame(main_frame, style='TFrame')
-    header_frame.pack(fill=tk.X, pady=(0, 15))
-
-    # Title and controls on the same line
-    title_frame = ttk.Frame(header_frame, style='TFrame')
-    title_frame.pack(fill=tk.X)
-
-    # Create main grid container
-    content_frame = ttk.Frame(main_frame, style='TFrame')
-    content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-    # Configure grid weights for responsive layout
-    content_frame.grid_columnconfigure(0, weight=1)  # Left column
-    content_frame.grid_columnconfigure(1, weight=1)  # Right column
-    content_frame.grid_rowconfigure(0, weight=0)     # Route section
-    content_frame.grid_rowconfigure(1, weight=0)     # Ticket type / Date time section
-    content_frame.grid_rowconfigure(2, weight=0)     # Settings / Controls section
-    content_frame.grid_rowconfigure(3, weight=0)     # Author text
-    content_frame.grid_rowconfigure(4, weight=1)     # Log section (expands)
-
-    # Route selection section (Top Left)
-    route_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    route_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-
-    # Nereden/Nereye
     nereden_var = tk.StringVar(value="Eskişehir")
     nereye_var = tk.StringVar(value="Ankara Gar")
-    ttk.Label(route_frame, text="🚂 Rota Seçimi", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
-
-    # Use an inner frame with grid to align label and combobox on the same row
-    route_inner = ttk.Frame(route_frame, style='TFrame')
-    route_inner.pack(padx=10, pady=(0, 10), fill='x')
-
-    ttk.Label(route_inner, text="Nereden:").grid(row=0, column=0, sticky='w', padx=(0, 5), pady=2)
-    cmb_nereden = ttk.Combobox(route_inner, values=Sehirler.sehir_listesi, textvariable=nereden_var, width=20)
-    cmb_nereden.grid(row=0, column=1, sticky='ew', pady=2)
-
-    ttk.Label(route_inner, text="Nereye:").grid(row=1, column=0, sticky='w', padx=(0, 5), pady=2)
-    cmb_nereye = ttk.Combobox(route_inner, values=Sehirler.sehir_listesi, textvariable=nereye_var, width=20)
-    cmb_nereye.grid(row=1, column=1, sticky='ew', pady=2)
-
-    # Allow the combobox column to expand for better alignment
-    route_inner.grid_columnconfigure(1, weight=1)
-
-    # Ticket type section (Top Right)
-    ticket_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    ticket_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-
-    # Bilet türü
+    tarih_var = tk.StringVar(value=current_date)
+    saat_var = tk.StringVar(value=current_time)
     ekonomi_var = tk.BooleanVar(value=True)
     business_var = tk.BooleanVar(value=False)
-    ttk.Label(ticket_frame, text="🎫 Bilet Türü", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
-    ttk.Label(ticket_frame, text="Arama yapılacak bilet türünü seçiniz:").pack(pady=(0, 5))
-    check_frame = ttk.Frame(ticket_frame)
-    check_frame.pack(pady=(0, 10))
-    ttk.Checkbutton(check_frame, text="Ekonomi", variable=ekonomi_var).pack(side=tk.LEFT, padx=(0, 20))
-    ttk.Checkbutton(check_frame, text="Business", variable=business_var).pack(side=tk.LEFT)
-
-    # Date and time section (Middle Left)
-    datetime_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    datetime_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
-
-    # Takvim ve saat
-    tarih_var = tk.StringVar(value=currentDate)
-    saat_var = tk.StringVar(value=currentTime)
-
-    def set_today():
-        tarih_var.set(currentDate)
-
-    ttk.Label(datetime_frame, text="📅 Tarih ve Saat", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
-    date_frame = ttk.Frame(datetime_frame)
-    date_frame.pack(pady=(0, 10))
-    ttk.Label(date_frame, text="Tarih:").grid(row=0, column=0, sticky='w', padx=(0, 5))
-    date_entry = DateEntry(date_frame, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=12)
-    date_entry.grid(row=0, column=1, padx=(0, 10))
-    ttk.Button(date_frame, text="Bugün", command=set_today).grid(row=0, column=2)
-    ttk.Label(date_frame, text="Saat:").grid(row=1, column=0, sticky='w', padx=(0, 5), pady=(5, 0))
-    ttk.Entry(date_frame, textvariable=saat_var, width=12).grid(row=1, column=1, padx=(0, 10), pady=(5, 0))
-    ttk.Label(date_frame, text="Örnek: 12:30").grid(row=1, column=2, pady=(5, 0))
-
-    # Search frequency section (Middle Right)
-    frequency_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    frequency_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
-
-    # Arama sıklığı
     delay_time_var = tk.IntVar(value=1)
-    ttk.Label(frequency_frame, text="⏱️ Arama Sıklığı", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
-    ttk.Label(frequency_frame, text="Arama sıklığını seçiniz:").pack(pady=(0, 5))
-    ttk.Scale(frequency_frame, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(fill=tk.X, padx=10, pady=(0, 5))
-    delay_time_label = ttk.Label(frequency_frame, text=f"{delay_time_var.get()} dakika")
-    delay_time_label.pack(pady=(0, 10))
-
-    def update_delay_time_label(value):
-        delay_time_label.config(text=f"{int(float(value))} dakika")
-
-    delay_time_var.trace_add(
-        "write", lambda *args: update_delay_time_label(delay_time_var.get())
-    )
-    delay_time_label.bind(
-        "<Button-1>",
-        lambda e: simpledialog.askinteger(
-            "Arama Sıklığı",
-            "Arama sıklığını seçiniz (dakikada bir):",
-            initialvalue=delay_time_var.get(),
-            minvalue=1,
-            maxvalue=30,
-            parent=frequency_frame,
-        ),
-    )
-
-    # Settings section (Bottom Left)
-    settings_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    settings_frame.grid(row=2, column=0, sticky='nsew', padx=5, pady=5)
-
-    # Telegram and sound settings
     telegram_msg_var = tk.BooleanVar(value=False)
     bot_token_var = tk.StringVar()
     chat_id_var = tk.StringVar()
     ses_var = tk.BooleanVar(value=True)
+    update_status_var = tk.StringVar(value="Sürüm bilgisi hazırlanıyor...")
+    update_detail_var = tk.StringVar(value=f"Yüklü sürüm: v{current_version}")
+    run_status_var = tk.StringVar(value="Hazır")
+    latest_release_url = {"value": GITHUB_RELEASES_URL}
 
-    ttk.Label(settings_frame, text="📢 Bildirim Ayarları", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
+    main_frame = ttk.Frame(root, style="App.TFrame", padding=18)
+    main_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Telegram settings
-    ttk.Label(settings_frame, text="Telegram (Opsiyonel):").pack(anchor="w", padx=10, pady=(5, 2))
-    ttk.Checkbutton(settings_frame, text="Bilet bulunursa mesaj gönder", variable=telegram_msg_var).pack(anchor="w", padx=20)
-    ttk.Label(settings_frame, text="Bot Token:").pack(anchor="w", padx=10, pady=(5, 2))
-    bot_token_entry = ttk.Entry(settings_frame, textvariable=bot_token_var, width=25)
-    bot_token_entry.pack(padx=10, pady=(0, 5))
-    ttk.Label(settings_frame, text="Chat ID:").pack(anchor="w", padx=10, pady=(5, 2))
-    chat_id_entry = ttk.Entry(settings_frame, textvariable=chat_id_var, width=25)
-    chat_id_entry.pack(padx=10, pady=(0, 10))
+    header_frame = ttk.Frame(main_frame, style="App.TFrame")
+    header_frame.pack(fill=tk.X, pady=(0, 14))
 
-    # Sound settings
-    ttk.Label(settings_frame, text="Ses (Opsiyonel):").pack(anchor="w", padx=10, pady=(5, 2))
-    ttk.Checkbutton(settings_frame, text="Bilet bulunursa ses çal", variable=ses_var).pack(anchor="w", padx=20, pady=(0, 10))
+    title_column = ttk.Frame(header_frame, style="App.TFrame")
+    title_column.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    ttk.Label(title_column, text="TCDD Bilet Yer Kontrol", style="Title.TLabel").pack(anchor="w")
+    ttk.Label(
+        title_column,
+        text="Daha temiz bir akış, iyileştirilmiş kontroller ve sürüm takibi tek ekranda.",
+        style="Muted.TLabel",
+    ).pack(anchor="w", pady=(4, 0))
 
-    # Control buttons section (Bottom Right)
-    control_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    control_frame.grid(row=2, column=1, sticky='nsew', padx=5, pady=5)
+    version_frame = tk.Frame(
+        header_frame,
+        bg=ACCENT_SOFT,
+        highlightbackground="#b7d4eb",
+        highlightthickness=1,
+    )
+    version_frame.pack(side=tk.RIGHT, padx=(16, 0), ipadx=12, ipady=8)
+    tk.Label(
+        version_frame,
+        text=f"v{current_version}",
+        bg=ACCENT_SOFT,
+        fg=ACCENT,
+        font=("Segoe UI Semibold", 16),
+    ).pack()
+    tk.Label(
+        version_frame,
+        text="Yüklü sürüm",
+        bg=ACCENT_SOFT,
+        fg=TEXT_MUTED,
+        font=("Segoe UI", 9),
+    ).pack()
 
-    ttk.Label(control_frame, text="🎮 Kontrol Paneli", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 10))
+    overview_frame = tk.Frame(
+        main_frame,
+        bg=CARD_BG,
+        highlightbackground=BORDER,
+        highlightthickness=1,
+    )
+    overview_frame.pack(fill=tk.X, pady=(0, 14))
 
-    # Main control buttons
-    main_buttons_frame = ttk.Frame(control_frame, style='TFrame')
-    main_buttons_frame.pack(pady=(0, 10))
-    btn_start = ttk.Button(main_buttons_frame, text="🔍 Başla", style='Start.TButton', width=12)
-    btn_stop = ttk.Button(main_buttons_frame, text="⏹️ Durdur", state=tk.DISABLED, style='Stop.TButton', width=10)
-    btn_start.pack(side=tk.LEFT, padx=5)
-    btn_stop.pack(side=tk.LEFT, padx=5)
+    status_left = tk.Frame(overview_frame, bg=CARD_BG)
+    status_left.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=16, pady=14)
+    tk.Label(
+        status_left,
+        textvariable=update_status_var,
+        bg=CARD_BG,
+        fg=TEXT_MAIN,
+        font=("Segoe UI Semibold", 12),
+    ).pack(anchor="w", pady=(3, 2))
+    tk.Label(
+        status_left,
+        textvariable=update_detail_var,
+        bg=CARD_BG,
+        fg=TEXT_MUTED,
+        font=("Segoe UI", 10),
+    ).pack(anchor="w")
 
-    # Action buttons
-    action_buttons_frame = ttk.Frame(control_frame, style='TFrame')
-    action_buttons_frame.pack(pady=(0, 10))
-    btn_tcdd = ttk.Button(action_buttons_frame, text="🌐 TCDD Sitesi", width=12)
-    btn_help = ttk.Button(action_buttons_frame, text="❓ Yardım", width=10)
+    status_actions = ttk.Frame(overview_frame, style="App.TFrame")
+    status_actions.pack(side=tk.RIGHT, padx=16, pady=14)
 
-    btn_tcdd.pack(side=tk.LEFT, padx=5)
-    btn_help.pack(side=tk.LEFT, padx=5)
+    content_frame = ttk.Frame(main_frame, style="App.TFrame")
+    content_frame.pack(fill=tk.BOTH, expand=True)
+    content_frame.grid_columnconfigure(0, weight=3)
+    content_frame.grid_columnconfigure(1, weight=2)
+    content_frame.grid_rowconfigure(2, weight=1)
 
-    
-    # Secondary buttons
-    secondary_buttons_frame = ttk.Frame(control_frame, style='TFrame')
-    secondary_buttons_frame.pack(pady=(0, 10))
-    btn_toggle = ttk.Button(secondary_buttons_frame, text="🔄 LOG'ları göster", width=15, style='TButton')
-    btn_close = ttk.Button(secondary_buttons_frame, text="❌ Kapat", command=root.destroy, style='Close.TButton', width=10)
-    btn_close.pack(side=tk.LEFT, padx=5)
-    btn_toggle.pack(side=tk.LEFT, padx=5)
+    route_frame = ttk.LabelFrame(content_frame, text="Rota ve Tarih", style="Card.TLabelframe")
+    route_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
+    route_grid = ttk.Frame(route_frame, style="CardInner.TFrame")
+    route_grid.pack(fill=tk.X)
+    route_grid.grid_columnconfigure(1, weight=1)
+    route_grid.grid_columnconfigure(3, weight=1)
 
-    # Donate button on separate line
-    def open_donate():
-        wbopen("https://www.buymeacoffee.com/mcagriaksoy")
+    ttk.Label(route_grid, text="Nereden", style="Section.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 4))
+    ttk.Combobox(route_grid, values=Sehirler.sehir_listesi, textvariable=nereden_var).grid(
+        row=1, column=0, columnspan=2, sticky="ew", padx=(0, 10)
+    )
+    ttk.Label(route_grid, text="Nereye", style="Section.TLabel").grid(row=0, column=2, sticky="w", pady=(0, 4))
+    ttk.Combobox(route_grid, values=Sehirler.sehir_listesi, textvariable=nereye_var).grid(
+        row=1, column=2, columnspan=2, sticky="ew"
+    )
+    ttk.Label(route_grid, text="Tarih", style="Section.TLabel").grid(row=2, column=0, sticky="w", pady=(14, 4))
+    DateEntry(route_grid, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=16).grid(
+        row=3, column=0, sticky="w"
+    )
+    ttk.Button(
+        route_grid,
+        text="Bugün",
+        style="Ghost.TButton",
+        command=lambda: tarih_var.set(current_date),
+    ).grid(row=3, column=1, sticky="w")
+    ttk.Label(route_grid, text="Saat", style="Section.TLabel").grid(row=2, column=2, sticky="w", pady=(14, 4))
+    ttk.Entry(route_grid, textvariable=saat_var, width=18).grid(row=3, column=2, sticky="ew", padx=(0, 10))
+    ttk.Label(route_grid, text="Örnek 12:30", style="CardText.TLabel").grid(row=3, column=3, sticky="w")
 
-    donate_frame = ttk.Frame(control_frame, style='TFrame')
-    donate_frame.pack(pady=(0, 10))
+    preferences_frame = ttk.LabelFrame(content_frame, text="Arama Tercihleri", style="Card.TLabelframe")
+    preferences_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
+    ttk.Label(preferences_frame, text="Bilet tipi seçimi", style="Section.TLabel").pack(anchor="w")
 
-    try:
-        bmc_image = tk.PhotoImage(file="donate.jpg", master=donate_frame)
-        bmc_image = bmc_image.subsample(2, 2)  # Smaller size
-        style.configure("BMC.TButton", relief="flat", borderwidth=0, background='#f8f9fa')
-        btn_donate = ttk.Button(
-            donate_frame, image=bmc_image, command=open_donate, style="BMC.TButton"
-        )
-        btn_donate.image = bmc_image  # Prevent garbage collection
-        btn_donate.pack()
-    except Exception:
-        # If image not found, create a text button instead
-        btn_donate = ttk.Button(
-            donate_frame, text="☕ Donate", command=open_donate, style="TButton"
-        )
-        btn_donate.pack()
+    seat_type_row = ttk.Frame(preferences_frame, style="CardInner.TFrame")
+    seat_type_row.pack(fill=tk.X, pady=(6, 10))
+    ttk.Checkbutton(seat_type_row, text="Ekonomi", variable=ekonomi_var).pack(side=tk.LEFT, padx=(0, 18))
+    ttk.Checkbutton(seat_type_row, text="Business", variable=business_var).pack(side=tk.LEFT)
 
-    # Author text before log section
-    author_frame = ttk.Frame(content_frame, style='TFrame')
-    author_frame.grid(row=3, column=0, columnspan=2, sticky='ew', padx=5, pady=(10, 5))
-    # Loader (hidden by default) - placed before the author text to indicate background processing
-    loader_frame = ttk.Frame(author_frame, style='TFrame')
-    loader_frame.pack(side=tk.TOP, fill='x')
-    loader = ttk.Progressbar(loader_frame, mode='indeterminate')
-    # Don't pack the loader yet; it'll be packed when active
+    ttk.Label(preferences_frame, text="Yeniden deneme aralığı", style="Section.TLabel").pack(anchor="w")
+    ttk.Scale(preferences_frame, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(fill=tk.X, pady=(6, 2))
+    delay_time_label = ttk.Label(preferences_frame, text="1 dakika", style="CardText.TLabel")
+    delay_time_label.pack(anchor="w")
 
-    author_label = ttk.Label(author_frame, text="Mehmet C. Aksoy 2022-2025 Tarafından Geliştirildi. Tüm hakları saklıdır.",
-                            font=('Segoe UI', 8), foreground='#6c757d')
-    author_label.pack(anchor='center')
+    notification_frame = ttk.LabelFrame(content_frame, text="Bildirimler", style="Card.TLabelframe")
+    notification_frame.grid(row=0, column=1, sticky="nsew", pady=(0, 10))
+    ttk.Checkbutton(
+        notification_frame,
+        text="Bilet bulununca Telegram bildirimi gönder",
+        variable=telegram_msg_var,
+    ).pack(anchor="w", pady=(0, 8))
+    ttk.Label(notification_frame, text="Bot Token", style="Section.TLabel").pack(anchor="w")
+    bot_token_entry = ttk.Entry(notification_frame, textvariable=bot_token_var)
+    bot_token_entry.pack(fill=tk.X, pady=(4, 8))
+    ttk.Label(notification_frame, text="Chat ID", style="Section.TLabel").pack(anchor="w")
+    chat_id_entry = ttk.Entry(notification_frame, textvariable=chat_id_var)
+    chat_id_entry.pack(fill=tk.X, pady=(4, 8))
+    ttk.Checkbutton(
+        notification_frame,
+        text="Bilet bulununca sesli bildirim çal",
+        variable=ses_var,
+    ).pack(anchor="w", pady=(4, 0))
 
-    # Log section (Full width bottom)
-    log_frame = ttk.Frame(content_frame, style='TFrame', relief='solid', borderwidth=1)
-    log_frame.grid(row=4, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
+    controls_frame = ttk.LabelFrame(content_frame, text="Kontrol Paneli", style="Card.TLabelframe")
+    controls_frame.grid(row=1, column=1, sticky="nsew", pady=(0, 10))
 
-    ttk.Label(log_frame, text="📋 Arama Logları", font=('Segoe UI', 10, 'bold')).pack(pady=(10, 5))
-    log_text = ScrolledText(log_frame, height=8, state=tk.NORMAL, font=('Consolas', 9))
-    log_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+    controls_top = ttk.Frame(controls_frame, style="CardInner.TFrame")
+    controls_top.pack(fill=tk.X, pady=(0, 10))
+    btn_start = ttk.Button(controls_top, text="Aramayı Başlat", style="Primary.TButton")
+    btn_start.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
+    btn_stop = ttk.Button(controls_top, text="Durdur", style="Danger.TButton", state=tk.DISABLED)
+    btn_stop.pack(side=tk.LEFT)
 
-    # Thread-safe GUI logging helper
-    def gui_log(msg):
-        try:
-            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            root.after(0, lambda: log_text.insert(tk.END, f"[{ts}] {msg}\n"))
-            root.after(0, lambda: log_text.see(tk.END))
-        except Exception:
-            # best-effort, do not crash background thread
-            pass
+    controls_links = ttk.Frame(controls_frame, style="CardInner.TFrame")
+    controls_links.pack(fill=tk.X, pady=(0, 10))
 
-    # Event handlers
-    def on_start():
-        nereden = nereden_var.get()
-        nereye = nereye_var.get()
-        tarih = tarih_var.get()
-        saat = saat_var.get()
-        business = business_var.get()
-        ekonomi = ekonomi_var.get()
-        if not saat:
-            messagebox.showwarning("Uyarı", "Lütfen saat bilgisini giriniz!")
-            return
-        if not tarih:
-            messagebox.showwarning("Uyarı", "Lütfen tarih bilgisini giriniz!")
-            return
-        if nereden == nereye:
-            messagebox.showwarning("Uyarı", "Nereden ve Nereye aynı olamaz!")
-            return
-        if not (business or ekonomi):
-            messagebox.showwarning("Uyarı", "Lütfen bilet türünü seçiniz!")
-            return
-        if "/" in tarih:
-            tarih = tarih.replace("/", ".")
-        elif "-" in tarih:
-            tarih = tarih.replace("-", ".")
-        if "." in saat:
-            saat = saat.replace(".", ":")
-        elif "," in saat:
-            saat = saat.replace(",", ":")
-        delay_time = delay_time_var.get()
-        telegram_msg = telegram_msg_var.get()
-        if telegram_msg:
-            if not bot_token_var.get() or not chat_id_var.get():
-                messagebox.showwarning(
-                    "Uyarı", "Telegram bot token ve chat id bilgilerini giriniz!"
-                )
-                return
-        bot_token = bot_token_var.get()
-        if bot_token and not TelegramMsg.TelegramMsg().check_telegram_bot_status(
-            bot_token
-        ):
-            messagebox.showwarning(
-                "Uyarı", "Telegram bot token bilgisi hatali! kontrol ediniz!"
-            )
-            return
-        chat_id = chat_id_var.get()
-        ses = ses_var.get()
-        btn_start.config(state=tk.DISABLED, style='Disabled.TButton')
-        btn_stop.config(state=tk.NORMAL, style='Stop.TButton')
-        gui_log("Arama başladı. Lütfen bekleyin...")
+    controls_help = ttk.Frame(controls_frame, style="CardInner.TFrame")
+    controls_help.pack(fill=tk.X)
+    ttk.Button(
+        controls_help,
+        text="GitHub Sayfası",
+        style="Ghost.TButton",
+        command=lambda: wbopen("https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"),
+    ).pack(side=tk.LEFT, padx=(0, 8))
+    btn_toggle = ttk.Button(controls_help, text="Logu Gizle", style="Ghost.TButton")
+    btn_toggle.pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(
+        controls_help,
+        text="Destek Ol",
+        style="Ghost.TButton",
+        command=lambda: wbopen("https://www.buymeacoffee.com/mcagriaksoy"),
+    ).pack(side=tk.LEFT)
 
-        # Show and start the loader in a thread-safe way
-        def _show_loader():
+    status_frame = ttk.LabelFrame(content_frame, text="Çalışma Durumu", style="Card.TLabelframe")
+    status_frame.grid(row=2, column=1, sticky="nsew")
+    ttk.Label(status_frame, text="Canlı durum", style="Section.TLabel").pack(anchor="w")
+    ttk.Label(
+        status_frame,
+        textvariable=run_status_var,
+        style="CardText.TLabel",
+        font=("Segoe UI Semibold", 12),
+    ).pack(anchor="w", pady=(4, 10))
+    loader = ttk.Progressbar(status_frame, mode="indeterminate", style="Status.Horizontal.TProgressbar")
+    loader.pack(fill=tk.X, pady=(0, 10))
+    ttk.Label(
+        status_frame,
+        text="Uygulama her turda sayfayı açıp seferi kontrol eder. Durdur dediğinizde bekleme döngüsü kesilir.",
+        style="CardText.TLabel",
+        wraplength=250,
+        justify="left",
+    ).pack(anchor="w")
+
+    footer_frame = ttk.Frame(main_frame, style="App.TFrame")
+    footer_frame.pack(fill=tk.X, pady=(8, 0))
+    ttk.Label(
+        footer_frame,
+        text="Mehmet C. Aksoy tarafından geliştirilen fork sürümü. Açık kaynak topluluğuna teşekkürler.",
+        style="Muted.TLabel",
+    ).pack(side=tk.LEFT)
+
+    log_container = ttk.LabelFrame(content_frame, text="Arama Logları", style="Card.TLabelframe")
+    log_container.grid(row=2, column=0, sticky="nsew")
+    log_text = ScrolledText(
+        log_container,
+        height=14,
+        state=tk.NORMAL,
+        bg="#0f1720",
+        fg="#d8e2ee",
+        insertbackground="#d8e2ee",
+        relief="flat",
+        font=("Cascadia Mono", 9),
+        wrap="word",
+    )
+    log_text.pack(fill=tk.BOTH, expand=True)
+
+    def append_log(message):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        def _append():
+            log_text.insert(tk.END, f"[{timestamp}] {message}\n")
+            log_text.see(tk.END)
+
+        root.after(0, _append)
+
+    def set_run_status(message):
+        root.after(0, lambda: run_status_var.set(message))
+
+    def set_running(is_running):
+        def _set():
+            if is_running:
+                btn_start.config(state=tk.DISABLED)
+                btn_stop.config(state=tk.NORMAL)
+                loader.start(12)
+            else:
+                btn_start.config(state=tk.NORMAL)
+                btn_stop.config(state=tk.DISABLED)
+                loader.stop()
+
+        root.after(0, _set)
+
+    def update_delay_label(*_args):
+        value = int(delay_time_var.get())
+        delay_time_label.config(text=f"{value} dakika")
+
+    delay_time_var.trace_add("write", update_delay_label)
+    update_delay_label()
+
+    def toggle_telegram_inputs(*_args):
+        state = tk.NORMAL if telegram_msg_var.get() else tk.DISABLED
+        bot_token_entry.config(state=state)
+        chat_id_entry.config(state=state)
+
+    telegram_msg_var.trace_add("write", toggle_telegram_inputs)
+    toggle_telegram_inputs()
+
+    log_visible = {"value": True}
+
+    def on_toggle():
+        log_visible["value"] = not log_visible["value"]
+        if log_visible["value"]:
+            log_container.grid()
+            btn_toggle.config(text="Logu Gizle")
+            center_geometry(root, *APP_SIZE)
+        else:
+            log_container.grid_remove()
+            btn_toggle.config(text="Logu Göster")
+            center_geometry(root, *COMPACT_SIZE)
+
+    btn_toggle.config(command=on_toggle)
+
+    def check_updates(show_message=False):
+        update_status_var.set("Sürüm kontrol ediliyor...")
+        update_detail_var.set(f"Yüklü sürüm: v{current_version}")
+
+        def worker():
             try:
-                loader.pack(fill='x', padx=5, pady=(0, 5))
-                loader.start(10)
-            except Exception:
-                pass
+                release = fetch_latest_release_info()
+                latest_release_url["value"] = release["html_url"]
+                latest_version = release["version"] or release["tag_name"]
+                published_text = (
+                    release["published_at"][:10]
+                    if release["published_at"]
+                    else "Tarih bilinmiyor"
+                )
+                if parse_version_tuple(latest_version) > parse_version_tuple(current_version):
+                    status = f"Yeni sürüm mevcut: v{latest_version}"
+                    detail = f"Yüklü sürüm v{current_version}. Yayın tarihi: {published_text}"
+                else:
+                    status = f"En güncel sürüm sizde: v{current_version}"
+                    detail = f"GitHub son sürümü: {release['tag_name']} | {published_text}"
 
-        root.after(0, _show_loader)
+                root.after(0, lambda: update_status_var.set(status))
+                root.after(0, lambda: update_detail_var.set(detail))
+                if show_message:
+                    root.after(
+                        0,
+                        lambda: messagebox.showinfo("Sürüm Kontrolü", f"{status}\n{detail}"),
+                    )
+            except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+                root.after(0, lambda: update_status_var.set("Sürüm kontrolü yapılamadı"))
+                root.after(0, lambda: update_detail_var.set(f"Bağlantı hatası: {exc}"))
+                if show_message:
+                    root.after(
+                        0,
+                        lambda: messagebox.showwarning(
+                            "Sürüm Kontrolü",
+                            "GitHub releases bilgisi şu anda alınamadı.",
+                        ),
+                    )
 
-        def thread1(delay_time, telegram_msg, bot_token, chat_id, ses):
+        Thread(target=worker, daemon=True).start()
+
+    ttk.Button(
+        status_actions,
+        text="Sürüm Kontrol Et",
+        style="Ghost.TButton",
+        command=lambda: check_updates(show_message=True),
+    ).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(
+        status_actions,
+        text="Sürüm Notlarını Gör",
+        style="Primary.TButton",
+        command=lambda: wbopen(latest_release_url["value"]),
+    ).pack(side=tk.LEFT)
+
+    def on_start():
+        try:
+            payload = validate_form()
+        except ValueError as exc:
+            messagebox.showwarning("Form Hatası", str(exc))
+            return
+
+        append_log(
+            f"Arama başladı: {payload['nereden']} -> {payload['nereye']} | {payload['tarih']} {payload['saat']}"
+        )
+        set_run_status("Arama aktif")
+        set_running(True)
+
+        def thread_runner():
             global g_isStopped
             g_isStopped = False
             attempt = 0
-            while True:
-                if g_isStopped:
-                    gui_log("Kullanıcı tarafından durduruldu (döngü başlangıcında).")
-                    break
+
+            while not g_isStopped:
                 attempt += 1
-                gui_log(f"Başlangıç döngüsü: deneme #{attempt}")
+                set_run_status(f"Deneme {attempt} çalışıyor")
+                append_log(f"Deneme #{attempt} başlatıldı.")
+
                 driver = driver_setting()
                 if driver is None:
-                    gui_log("HATA: Tarayıcı başlatılamadı! Lütfen Edge tarayıcısının yüklü olduğundan emin olun.")
-                    btn_start.config(state=tk.NORMAL)
-                    btn_stop.config(state=tk.DISABLED)
+                    append_log("Tarayıcı başlatılamadı. Edge ve sürücü kurulumunu kontrol edin.")
+                    set_run_status("Tarayıcı başlatılamadı")
                     break
 
-                if g_isStopped:
-                    gui_log("Durduruldu (sayfa yüklemeden önce).")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break
-                # driver_get with exception handling
                 try:
-                    gui_log("Sayfa yükleme başlıyor...")
+                    append_log("TCDD sayfası yükleniyor...")
                     driver_get(driver)
-                    gui_log("Sayfa yüklendi başarılı.")
-                except InvalidSessionIdException as ise:
-                    gui_log(f"InvalidSessionIdException during driver_get: {ise}")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break  # Kill the thread on exception
-                except Exception as e:
-                    gui_log(f"Hata: sayfa yüklenemedi: {e}")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break  # Kill the thread on exception
-
-                if g_isStopped:
-                    gui_log("Durduruldu (rota girişinden önce).")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break
-                # route with exception handling
-                try:
-                    gui_log(f"Rota bilgileri giriliyor: {nereden} -> {nereye} {tarih}")
-                    route(driver, nereden, nereye, tarih)
-                    gui_log("Rota bilgileri girildi.")
-                except InvalidSessionIdException as ise:
-                    gui_log(f"InvalidSessionIdException during route: {ise}")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break  # Kill the thread on exception
-                except Exception as e:
-                    gui_log(f"Rota işlemi sırasında hata: {e}")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break  # Kill the thread on exception
-
-                if g_isStopped:
-                    gui_log("Durduruldu (kontrol öncesi).")
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
-                    break
-                # control with exception handling
-                try:
-                    gui_log(f"Kontrol başlıyor: Saat={saat}, Bekleme={delay_time} dakika")
-                    control(driver, saat, delay_time, telegram_msg, bot_token, chat_id, ses)
-                    gui_log("Kontrol tamamlandı.")
-                except InvalidSessionIdException as ise:
-                    gui_log(f"InvalidSessionIdException during control: {ise}")
-                    driver.quit()
-                except Exception as e:
-                    gui_log(f"Kontrol sırasında hata: {e}")
-                    driver.quit()
-
-                gui_log(f"Bekleniyor: {delay_time} dakika sonra tekrar denenecek.")
-                # Replace single sleep with loop to check g_isStopped every second
-                for _ in range(delay_time * 60):
                     if g_isStopped:
-                        gui_log("Bekleme sırasında durduruldu.")
-                        driver.quit()
+                        safe_driver_quit(driver)
+                        break
+
+                    append_log("Rota bilgileri giriliyor...")
+                    route_ok = route(
+                        driver,
+                        payload["nereden"],
+                        payload["nereye"],
+                        payload["tarih"],
+                    )
+                    if not route_ok:
+                        append_log("Rota bilgileri girilemedi veya işlem durduruldu.")
+                        continue
+
+                    append_log("Sefer uygunluk kontrolü yapılıyor...")
+                    result = control(
+                        driver,
+                        payload["saat"],
+                        payload["delay_time"],
+                        payload["telegram_msg"],
+                        payload["bot_token"],
+                        payload["chat_id"],
+                        payload["ses"],
+                        payload["allow_economy"],
+                        payload["allow_business"],
+                    )
+                    if result == ErrCodes.BASARILI:
+                        set_run_status("Bilet bulundu")
+                        break
+                    if result == ErrCodes.GUZERGAH_HATASI:
+                        set_run_status("Güzergah hatası")
+                        break
+                except InvalidSessionIdException as exc:
+                    append_log(f"Tarayıcı oturumu beklenmedik şekilde kapandı: {exc}")
+                    set_run_status("Tarayıcı oturumu kapandı")
+                    safe_driver_quit(driver)
+                    break
+                except Exception as exc:
+                    append_log(f"Beklenmeyen hata: {exc}")
+                    set_run_status("Beklenmeyen hata")
+                    safe_driver_quit(driver)
+                    break
+
+                append_log(f"{payload['delay_time']} dakika bekleniyor.")
+                set_run_status("Bekleme modunda")
+                for _ in range(payload["delay_time"] * 60):
+                    if g_isStopped:
+                        append_log("Bekleme döngüsü kullanıcı tarafından durduruldu.")
                         break
                     sleep(1)
 
-            # When the background loop exits (either stopped or finished), stop the loader and restore buttons
-            def _hide_loader_and_restore():
-                try:
-                    loader.stop()
-                    loader.pack_forget()
-                except Exception:
-                    pass
-                btn_start.config(state=tk.NORMAL)
-                btn_stop.config(state=tk.DISABLED)
+            if g_isStopped:
+                set_run_status("Kullanıcı tarafından durduruldu")
+            set_running(False)
 
-            root.after(0, _hide_loader_and_restore)
-
-        t1 = Thread(
-            target=thread1, args=(delay_time, telegram_msg, bot_token, chat_id, ses)
-        )
-        t1.start()
+        Thread(target=thread_runner, daemon=True).start()
 
     def on_stop():
-        btn_start.config(state=tk.NORMAL, style='Start.TButton')
-        btn_stop.config(state=tk.DISABLED, style='Disabled.TButton')
         global g_isStopped
         g_isStopped = True
-        log_text.delete(1.0, tk.END)
-        # Hide and stop loader when user presses stop
-        try:
-            loader.stop()
-            loader.pack_forget()
-        except Exception:
-            pass
-
-    def on_help():
-        if messagebox.askyesno("Yardım", "Yardım sayfasına gitmek ister misiniz?"):
-            wbopen("https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol")
-
-    def on_tcdd():
-        messagebox.showinfo(
-            "Bilgi",
-            "TCDD Bilet Satış Sitesine yönlendiriliyorsunuz. Lütfen bekleyin...",
-        )
-        wbopen("https://ebilet.tcddtasimacilik.gov.tr")
-
-    def on_toggle():
-        if root.geometry().startswith(f"{FULL_SIZE[0]}x{FULL_SIZE[1]}"):
-            btn_toggle.config(text="🔄 Genişlet/Daralt")
-            root.geometry(f"{HALF_SIZE[0]}x{HALF_SIZE[1]}")
-        else:
-            btn_toggle.config(text="🔄 Genişlet/Daralt")
-            root.geometry(f"{FULL_SIZE[0]}x{FULL_SIZE[1]}")
+        append_log("Durdur komutu alındı.")
+        set_run_status("Durduruluyor")
+        set_running(False)
 
     btn_start.config(command=on_start)
     btn_stop.config(command=on_stop)
-    btn_help.config(command=on_help)
-    btn_tcdd.config(command=on_tcdd)
-    btn_toggle.config(command=on_toggle)
 
+    def show_welcome():
+        temp_file = os.path.join(os.getenv("TEMP", os.getcwd()), "tcdd_bilet_cfg.txt")
+        if os.path.exists(temp_file):
+            return
+        messagebox.showinfo(
+            "Hoş Geldiniz",
+            "İlk tarama biraz zaman alabilir. Sürüm kontrolü ve log paneli artık ana ekranda görünebilir.",
+        )
+        try:
+            with open(temp_file, "w", encoding="utf-8") as file:
+                file.write("1")
+        except OSError:
+            pass
+
+    root.after(120, show_welcome)
+    root.after(300, check_updates)
     root.mainloop()
 
 

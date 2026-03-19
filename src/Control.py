@@ -29,10 +29,12 @@ MAX_TREN_SAYISI = 22
 class Control:
     """Class: Sayfada yer var mı yok mu kontrol eder."""
 
-    def __init__(self, driver, time):
+    def __init__(self, driver, time, allow_economy=True, allow_business=False):
         """Constructor methodu."""
         self.driver = driver
         self.zaman = time
+        self.allow_economy = allow_economy
+        self.allow_business = allow_business
         # logging setup
         if not logging.getLogger().handlers:
             logging.basicConfig(
@@ -143,31 +145,35 @@ class Control:
                             f"Economy Row: {economy_row}, Business Row: {business_row}"
                         )
 
+                        economy_seat = None
+                        business_seat = None
                         try:
-                            economy_seat = (
-                                WebDriverWait(self.driver, 10)
-                                .until(
-                                    EC.visibility_of_element_located(
-                                        (
-                                            By.XPATH,
-                                            f"/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row + 1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[{economy_row}]/button/div/div[2]/div/div/span",
+                            if economy_row:
+                                economy_seat = (
+                                    WebDriverWait(self.driver, 10)
+                                    .until(
+                                        EC.visibility_of_element_located(
+                                            (
+                                                By.XPATH,
+                                                f"/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row + 1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[{economy_row}]/button/div/div[2]/div/div/span",
+                                            )
                                         )
                                     )
+                                    .text
                                 )
-                                .text
-                            )
-                            business_seat = (
-                                WebDriverWait(self.driver, 10)
-                                .until(
-                                    EC.visibility_of_element_located(
-                                        (
-                                            By.XPATH,
-                                            f"/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row + 1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/button/div/div[2]/div/div/span",
+                            if business_row:
+                                business_seat = (
+                                    WebDriverWait(self.driver, 10)
+                                    .until(
+                                        EC.visibility_of_element_located(
+                                            (
+                                                By.XPATH,
+                                                f"/html/body/div/main/section/div[2]/div/div[1]/div/div/section/div[{row + 1}]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[{business_row}]/button/div/div[2]/div/div/span",
+                                            )
                                         )
                                     )
+                                    .text
                                 )
-                                .text
-                            )
                         except TimeoutException:
                             sys.stdout.write(
                                 "\nKoltuk bilgisi alınamadı, tekrar denenecek!"
@@ -179,32 +185,42 @@ class Control:
                         )
 
                         try:
-                            economy_seat = int(economy_seat[1:-1])
-                            business_seat = int(business_seat[1:-1])
+                            economy_seat = (
+                                int(economy_seat[1:-1]) if economy_seat else 0
+                            )
+                            business_seat = (
+                                int(business_seat[1:-1]) if business_seat else 0
+                            )
                         except ValueError:
                             sys.stdout.write(
                                 "\nKoltuk bilgisi dönüştürülemedi, tekrar denenecek!"
                             )
                             return ErrCodes.TEKRAR_DENE
 
-                        if economy_seat > 2 or business_seat > 2:
-                            sys.stdout.write("\nTrende yeteri kadar boş yer mevcut!")
+                        economy_match = self.allow_economy and economy_seat > 0
+                        business_match = self.allow_business and business_seat > 0
+
+                        if economy_match and economy_seat > 2:
+                            sys.stdout.write("\nEkonomi sinifinda yeteri kadar bos yer mevcut!")
                             return ErrCodes.BASARILI
-                        elif economy_seat in [1, 2]:
+                        if business_match and business_seat > 2:
+                            sys.stdout.write("\nBusiness sinifinda yeteri kadar bos yer mevcut!")
+                            return ErrCodes.BASARILI
+                        if economy_match and economy_seat in [1, 2]:
                             sys.stdout.write(
-                                f"\nEKONOMİ SINIFINDA Boş koltuk sayısı: {economy_seat} Acele et!!!!!"
+                                f"\nEKONOMI SINIFINDA bos koltuk sayisi: {economy_seat}. Acele et!"
                             )
                             return ErrCodes.BASARILI
-                        elif business_seat in [1, 2]:
+                        if business_match and business_seat in [1, 2]:
                             sys.stdout.write(
-                                f"\nBUSINESS SINIFINDA Boş koltuk sayısı: {business_seat} Acele et!!!!!"
+                                f"\nBUSINESS SINIFINDA bos koltuk sayisi: {business_seat}. Acele et!"
                             )
                             return ErrCodes.BASARILI
-                        else:
-                            sys.stdout.write(
-                                "\nAradığınız seferde şu an hiç boş yer yok ya da sadece engelli koltuğu mevcut!"
-                            )
-                            return ErrCodes.TEKRAR_DENE
+
+                        sys.stdout.write(
+                            "\nSecilen bilet tipinde uygun bos yer bulunamadi."
+                        )
+                        return ErrCodes.TEKRAR_DENE
 
                 self.kill_driver()
                 return ErrCodes.SAAT_HATASI
@@ -255,11 +271,9 @@ class Control:
             return ErrCodes.GUZERGAH_HATASI
         except ConnectionAbortedError:
             self.kill_driver()
-            self.driver.quit()
             return ErrCodes.INTERNET_HATASI
         except ConnectionResetError:
             self.kill_driver()
-            self.driver.quit()
             return ErrCodes.INTERNET_HATASI
         except Exception as e:
             msg = f"Bilinmeyen bir hata oluştu: {e}"
@@ -267,7 +281,6 @@ class Control:
             self.logger.exception(msg)
             try:
                 self.kill_driver()
-                self.driver.quit()
             except Exception:
                 self.logger.debug("kill_driver failed after generic exception")
             self._notify_user(msg, "Bilinmeyen Hata")

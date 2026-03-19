@@ -20,6 +20,56 @@ from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 
+def cleanup_temp_user_data_dir(temp_dir, logger=None):
+    if not temp_dir:
+        return
+    try:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    except Exception as exc:
+        if logger:
+            logger.debug(f"Temp dir cleanup failed: {exc}")
+
+
+def cleanup_msedgedriver_processes(logger=None):
+    if platform.system() != "Windows":
+        return
+    try:
+        result = subprocess.run(
+            ["taskkill", "/F", "/T", "/IM", "msedgedriver.exe"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            if logger:
+                logger.info("Kalan msedgedriver.exe süreçleri sonlandırıldı.")
+        elif logger:
+            stderr_text = (result.stderr or "").strip()
+            stdout_text = (result.stdout or "").strip()
+            if "not found" not in stderr_text.lower() and "bulunamad" not in stdout_text.lower():
+                logger.debug(
+                    "msedgedriver temizliği bilgi mesajı: "
+                    f"stdout={stdout_text} stderr={stderr_text}"
+                )
+    except Exception as exc:
+        if logger:
+            logger.debug(f"msedgedriver temizliği başarısız: {exc}")
+
+
+def cleanup_webdriver_runtime(driver, logger=None):
+    if driver:
+        try:
+            driver.quit()
+        except Exception as exc:
+            if logger:
+                logger.debug(f"Driver quit sırasında hata: {exc}")
+
+        temp_dir = getattr(driver, "_tcdd_temp_user_data_dir", None)
+        cleanup_temp_user_data_dir(temp_dir, logger)
+
+    cleanup_msedgedriver_processes(logger)
+
+
 class DriverSetting:
     """Driver'ı ayarlar."""
 
@@ -142,16 +192,18 @@ class DriverSetting:
 
     def _cleanup_temp_dir(self):
         if self.temp_user_data_dir:
-            try:
-                shutil.rmtree(self.temp_user_data_dir, ignore_errors=True)
-            except Exception as exc:
-                self.logger.debug(f"Temp dir cleanup failed: {exc}")
-            finally:
-                self.temp_user_data_dir = None
+            cleanup_temp_user_data_dir(self.temp_user_data_dir, self.logger)
+            self.temp_user_data_dir = None
+
+    def _attach_runtime_metadata(self, driver):
+        if driver:
+            setattr(driver, "_tcdd_temp_user_data_dir", self.temp_user_data_dir)
+        return driver
 
     def _start_with_service(self, options, driver_path):
         service = EdgeService(driver_path)
         self.driver = Edge(service=service, options=options)
+        self._attach_runtime_metadata(self.driver)
         self.logger.info(f"Edge driver başlatıldı: {driver_path}")
         return self.driver
 
@@ -227,6 +279,7 @@ class DriverSetting:
 
     def driver_init(self):
         try:
+            cleanup_msedgedriver_processes(self.logger)
             options = self._build_options()
 
             local_driver = self._ensure_local_driver()
@@ -240,6 +293,7 @@ class DriverSetting:
 
             try:
                 self.driver = Edge(options=options)
+                self._attach_runtime_metadata(self.driver)
                 self.logger.info("Edge, Selenium Manager ile başlatıldı.")
                 return self.driver
             except Exception as selenium_manager_err:
@@ -278,8 +332,8 @@ class DriverSetting:
     def driver_quit(self):
         if self.driver:
             try:
-                self.driver.quit()
-                self.logger.info("Driver quit successfully.")
+                cleanup_webdriver_runtime(self.driver, self.logger)
+                self.logger.info("Driver runtime temizliği tamamlandı.")
             except Exception as exc:
                 self.logger.exception(f"Driver quit sırasında hata: {exc}")
             finally:

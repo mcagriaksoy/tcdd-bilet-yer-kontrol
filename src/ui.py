@@ -75,7 +75,7 @@ def read_current_version():
             return match.group(1)
     except OSError:
         pass
-    return "4.0.0"
+    return "4.1.0"
 
 
 def parse_version_tuple(raw_version):
@@ -199,7 +199,7 @@ def main():
         if not driver:
             return
         try:
-            driver.quit()
+            DriverSetting.cleanup_webdriver_runtime(driver)
         except Exception:
             pass
 

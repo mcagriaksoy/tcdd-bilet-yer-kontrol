@@ -31,7 +31,7 @@ Bu proje TCDD veya onun bağlı kuruluşları tarafından desteklenmemektedir. T
 
 ## İndir
 
-[![Download - v4.0](https://img.shields.io/static/v1?label=Download&message=v4_0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/tag/v4.0)
+[![Download - v4.1](https://img.shields.io/static/v1?label=Download&message=v4_0&color=2ea44f)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/tag/v4.1)
 
 ## Ekran Görüntüsü
 

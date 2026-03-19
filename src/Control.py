@@ -271,11 +271,9 @@ class Control:
             return ErrCodes.GUZERGAH_HATASI
         except ConnectionAbortedError:
             self.kill_driver()
-            self.driver.quit()
             return ErrCodes.INTERNET_HATASI
         except ConnectionResetError:
             self.kill_driver()
-            self.driver.quit()
             return ErrCodes.INTERNET_HATASI
         except Exception as e:
             msg = f"Bilinmeyen bir hata oluştu: {e}"
@@ -283,7 +281,6 @@ class Control:
             self.logger.exception(msg)
             try:
                 self.kill_driver()
-                self.driver.quit()
             except Exception:
                 self.logger.debug("kill_driver failed after generic exception")
             self._notify_user(msg, "Bilinmeyen Hata")

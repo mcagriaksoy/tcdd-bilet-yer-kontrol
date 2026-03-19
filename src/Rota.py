@@ -4,9 +4,14 @@ Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
 from sys import stdout
+from datetime import date
 from time import sleep
 
-from selenium.common.exceptions import TimeoutException, UnexpectedAlertPresentException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+    UnexpectedAlertPresentException,
+)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -14,9 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 NEREDEN_BOX = '//*[@id="fromTrainInput"]'
 NEREYE_BOX = '//*[@id="toTrainInput"]'
-TARIH_BOX = '//*[@id="__BVID__97"]/section/div[3]'
 BUTTON_BOX = '//*[@id="searchSeferButton"]'
-DATE_TODAY = "#__BVID__101 > section > div.row.pb-3.seferSearchDateRangePicker > div > div > div.daterangepicker.ltr.show-calendar.single.openscenter.linked > div.calendars > div > div.drp-calendar.col.left.single > div > table > tbody > tr:nth-child(4) > td.weekend.today.start-date"
 
 
 class Rota:
@@ -27,6 +30,92 @@ class Rota:
         self.first_location = nereden
         self.last_location = nereye
         self.date = date
+        self.short_wait = WebDriverWait(self.driver, 1.5)
+        self.medium_wait = WebDriverWait(self.driver, 8)
+
+    def _safe_click(self, element):
+        try:
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", element
+            )
+            element.click()
+        except Exception:
+            self.driver.execute_script("arguments[0].click();", element)
+
+    def _click_date_box(self):
+        selectors = [
+            (By.XPATH, '//*[@id="gidisTarih"]'),
+            (By.XPATH, '//*[@id="departureDate"]'),
+            (By.XPATH, '//input[contains(@class, "datepicker")]'),
+            (By.XPATH, '//input[contains(@name, "departure")]'),
+            (By.XPATH, '//input[contains(@placeholder, "Tarih")]'),
+            (By.XPATH, '//div[contains(@class, "date")]//input'),
+            (By.XPATH, '//section//div[contains(@class, "datepicker")]'),
+            (By.XPATH, '//div[contains(@class, "daterange")]'),
+            (By.XPATH, '//span[contains(text(), "Tarih")]/ancestor::div[1]'),
+        ]
+
+        last_error = None
+        for by, selector in selectors:
+            try:
+                elements = self.driver.find_elements(by, selector)
+                if not elements:
+                    continue
+                element = elements[0]
+                ActionChains(self.driver).move_to_element(element).pause(0.2).perform()
+                self._safe_click(element)
+                self.short_wait.until(
+                    EC.visibility_of_element_located(
+                        (
+                            By.XPATH,
+                            '//div[contains(@class, "daterangepicker") and contains(@style, "display: block")]'
+                            '|//div[contains(@class, "daterangepicker") and contains(@class, "show-calendar")]'
+                            '|//table[contains(@class, "table-condensed")]',
+                        )
+                    )
+                )
+                return True
+            except Exception as exc:
+                last_error = exc
+        raise TimeoutException(f"Tarih kutusu açılamadı: {last_error}")
+
+    def _select_date(self):
+        day, month, year = self.date.split(".")
+        day = str(int(day))
+
+        selectors = [
+            (
+                By.XPATH,
+                f'//*[@id="{day.zfill(2)} {month} {year}" or @id="{day} {month} {year}"]',
+            ),
+            (
+                By.XPATH,
+                f'//td[normalize-space()="{day}" and not(contains(@class, "off")) and not(contains(@class, "disabled"))]',
+            ),
+            (
+                By.XPATH,
+                f'//button[normalize-space()="{day}" and not(@disabled)]',
+            ),
+            (
+                By.XPATH,
+                f'//*[@aria-label="{self.date}"]',
+            ),
+        ]
+
+        last_error = None
+        for by, selector in selectors:
+            try:
+                element = self.short_wait.until(
+                    EC.element_to_be_clickable((by, selector))
+                )
+                self._safe_click(element)
+                return True
+            except Exception as exc:
+                last_error = exc
+        raise TimeoutException(f"Tarih seçilemedi: {last_error}")
+
+    def _is_today_selected(self):
+        return self.date == date.today().strftime("%d.%m.%Y")
 
     def dataInput(self):
         """Rota bilgilerini alır ve gerekli yerlere yazar."""
@@ -35,63 +124,45 @@ class Rota:
                 EC.visibility_of_element_located((By.XPATH, NEREDEN_BOX))
             )
             ActionChains(self.driver).move_to_element(element).perform()
-            element.click()
-
+            self._safe_click(element)
             element.send_keys(self.first_location)
 
-            # Wait for the dynamic element to be clickable and click it
-            dynamic_element = WebDriverWait(self.driver, 22).until(
+            dynamic_element = self.medium_wait.until(
                 EC.element_to_be_clickable((By.XPATH, "//*[contains(@id, 'gidis-')]"))
             )
-            dynamic_element.click()
+            self._safe_click(dynamic_element)
 
-            ######################################################################################
             sleep(1)
 
             element2 = WebDriverWait(self.driver, 22).until(
                 EC.visibility_of_element_located((By.XPATH, NEREYE_BOX))
             )
             ActionChains(self.driver).move_to_element(element2).perform()
-            element2.click()
-
+            self._safe_click(element2)
             element2.send_keys(self.last_location)
 
-            # Wait for the dynamic element to be clickable and click it
-            dynamic_element = WebDriverWait(self.driver, 22).until(
+            dynamic_element = self.medium_wait.until(
                 EC.element_to_be_clickable((By.XPATH, "//*[contains(@id, 'donus-')]"))
             )
-            dynamic_element.click()
-            ######################################################################################
+            self._safe_click(dynamic_element)
+
             sleep(0.5)
-            element3 = WebDriverWait(self.driver, 22).until(
-                EC.visibility_of_element_located((By.XPATH, TARIH_BOX))
-            )
-            ActionChains(self.driver).move_to_element(element3).perform()
-            element3.click()
-            date_splitted = self.date.split(".")
-            day = date_splitted[0]
-            month = date_splitted[1]
-            year = date_splitted[2]
+            if not self._is_today_selected():
+                self._click_date_box()
+                sleep(0.3)
+                self._select_date()
 
-            new_xpath = f'//*[@id="{day} {month} {year}"]'
-
-            dynamic_element = WebDriverWait(self.driver, 22).until(
-                EC.element_to_be_clickable((By.XPATH, new_xpath))
-            )
-            dynamic_element.click()
-
-            ######################################################################################
             sleep(1)
             element4 = WebDriverWait(self.driver, 22).until(
                 EC.visibility_of_element_located((By.XPATH, BUTTON_BOX))
             )
-            element4.click()
+            self._safe_click(element4)
 
         except UnexpectedAlertPresentException:
             stdout.write(
                 "\nGüzergah route bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
             )
             return -1
-        except TimeoutException:
-            stdout.write("\nWebsite Belirlenen surede acilamadi!")
+        except (TimeoutException, ElementClickInterceptedException) as exc:
+            stdout.write(f"\nTarih veya güzergah seçimi yapılamadı: {exc}")
             return -1

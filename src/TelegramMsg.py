@@ -2,30 +2,45 @@
 Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
 """
 
-from telegram import Bot
+import json
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote_plus
+from urllib.request import Request, urlopen
 
 
 class TelegramMsg:
-    """Send a message to your Telegram bot when the event occurs."""
+    """Telegram bot bildirimlerini HTTP API uzerinden yonetir."""
 
-    def __init__(self):
-        pass
+    def __init__(self, timeout=10):
+        self.timeout = timeout
+
+    def _request_json(self, endpoint):
+        request = Request(endpoint, headers={"User-Agent": "tcdd-bilet-yer-kontrol"})
+        with urlopen(request, timeout=self.timeout) as response:
+            payload = response.read().decode("utf-8")
+        return json.loads(payload)
 
     def check_telegram_bot_status(self, bot_token):
-        """Check the status of your Telegram bot."""
+        """Bot token gecerliligini kontrol eder."""
+        if not bot_token:
+            return False
+
+        endpoint = f"https://api.telegram.org/bot{bot_token}/getMe"
         try:
-            bot = Bot(token=bot_token)
-            bot.get_me()
-            return True
-        except Exception as e:
-            print(f"Error checking Telegram bot status: {e}")
+            payload = self._request_json(endpoint)
+            return bool(payload.get("ok"))
+        except (HTTPError, URLError, TimeoutError, ValueError):
             return False
 
     def send_telegram_message(self, bot_token, chat_id):
-        """Send a message to your Telegram bot when the event occurs."""
-        bot = Bot(token=bot_token)
+        """Telegram uzerinden bilet bulundu mesaji gonderir."""
+        message = quote_plus("Hey biletin bulundu! Acele et!")
+        endpoint = (
+            f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            f"?chat_id={chat_id}&text={message}"
+        )
         try:
-            bot = Bot(token=bot_token)
-            bot.send_message(chat_id=chat_id, text="Hey biletin bulundu! Acele et!")
-        except TelegramError as e:
-            print(f"Error sending Telegram message: {e}")
+            payload = self._request_json(endpoint)
+            return bool(payload.get("ok"))
+        except (HTTPError, URLError, TimeoutError, ValueError):
+            return False

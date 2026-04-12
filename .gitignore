@@ -1,9 +1,31 @@
-*.pyc
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual envs
+.venv/
+venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Desktop build output
+desktop_app/build/
+desktop_app/dist/
 *.spec
 
-src/__pycache__/*
-src/build/*
-src/dist/*
+# Runtime logs and temp
 *.log
 
+# Local binaries/drivers
 *.exe
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

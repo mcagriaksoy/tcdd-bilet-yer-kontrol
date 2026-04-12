@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TCDD Bilet Arama Botu</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('main.favicon') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="{{ url_for('main.favicon') }}" alt="TCDD Bilet Arama Botu ikonu" class="brand-icon">
+          </div>
+          <div class="brand-copy">
+            <strong>TCDD Bilet Arama Botu</strong>
+            <span>eBilet takibini otomatikleştir, yer açılır açılmaz haberdar ol!</span>
+          </div>
+        </div>
+        <button type="button" id="how-it-works-trigger" class="topbar-badge">Nasıl çalışır?</button>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="content-grid">
+        <form id="search-form" class="panel form-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Arama formu</p>
+              <h2>Sefer takibini başlat</h2>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Kalkış istasyonu</span>
+              <input list="stations" name="nereden" value="Eskişehir" required>
+            </label>
+
+            <label class="field">
+              <span>Varış istasyonu</span>
+              <input list="stations" name="nereye" value="Ankara Gar" required>
+            </label>
+          </div>
+
+          <div class="field-grid field-grid-tight">
+            <label class="field">
+              <span>Tarih</span>
+              <input type="date" name="tarih" required>
+            </label>
+
+            <label class="field">
+              <span>Saat</span>
+              <input type="time" name="saat" required>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Ne kadar sıklıkla kontrol edelim?</span>
+            <div class="delay-row">
+              <input type="range" id="delay-slider" min="1" max="60" value="1">
+              <div class="inline-field delay-inline">
+                <input type="number" id="delay-input" min="1" max="60" name="delay_time" value="1" required>
+                <em>dk</em>
+              </div>
+            </div>
+          </label>
+
+          <div class="seat-box">
+            <div class="seat-box-head">
+              <p>Bilet tipi</p>
+              <small>En az bir sınıf seçmelisin</small>
+            </div>
+            <div class="choice-row">
+              <label class="choice-pill">
+                <input type="checkbox" name="allow_economy" checked>
+                <span>Ekonomi</span>
+              </label>
+              <label class="choice-pill">
+                <input type="checkbox" name="allow_business">
+                <span>Business</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="notice-card">
+            <div class="notice-head">
+              <strong>Bildirim ayarları</strong>
+              <span id="telegram-badge" class="soft-badge">Kapalı</span>
+            </div>
+            <div class="notification-list">
+              <label class="notify-row">
+                <input type="checkbox" id="telegram-enabled" name="telegram_msg">
+                <span>Telegram ile haber ver</span>
+              </label>
+              <label class="notify-row">
+                <input type="checkbox" id="web-notification-enabled" name="web_notification_enabled">
+                <span>Web bildirimlerini aç</span>
+              </label>
+              <label class="notify-row">
+                <input type="checkbox" id="sound-enabled" name="sound_enabled" checked>
+                <span>Sesli bildirim</span>
+              </label>
+            </div>
+            <small id="web-notification-status" class="web-notification-status">Tarayıcı bildirimi: Kapalı</small>
+
+            <div id="telegram-fields" class="telegram-fields is-hidden">
+              <label class="field">
+                <span>Bot Token</span>
+                <input type="text" name="bot_token" placeholder="BotFather token">
+              </label>
+              <label class="field">
+                <span>Chat ID</span>
+                <input type="text" name="chat_id" placeholder="Örnek: 123456789">
+              </label>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="primary">Bilet Aramayı Başlat</button>
+            <button type="button" id="stop-button" class="ghost">Durdur</button>
+          </div>
+        </form>
+
+        <section class="panel status-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Sistem durumu</p>
+              <h2>Arama merkezi</h2>
+            </div>
+            <span id="status-pill" class="status-pill idle">Hazır</span>
+          </div>
+          <div class="system-indicator">
+            <span class="system-led"></span>
+            <span>Sistem durumu aktif</span>
+          </div>
+          <div id="running-loader" class="running-loader is-hidden">
+            <span class="spinner"></span>
+            <span>Arama su an devam ediyor...</span>
+          </div>
+
+          <div class="summary-grid">
+            <article>
+              <span>Başlangıç</span>
+              <strong id="started-at">-</strong>
+            </article>
+            <article>
+              <span>Bitiş</span>
+              <strong id="finished-at">-</strong>
+            </article>
+            <article>
+              <span>Son durum</span>
+              <strong id="status-echo">Beklemede</strong>
+            </article>
+          </div>
+
+          <div id="log-shell" class="log-shell is-collapsed">
+            <div class="log-shell-head">
+              <strong>İşlem günlüğü</strong>
+              <button type="button" id="toggle-log-btn" class="log-toggle-btn">Günlüğü Aç</button>
+            </div>
+            <pre id="log-output" class="log-output is-hidden">Log bekleniyor...</pre>
+          </div>
+
+          <div class="about-box">
+            <p class="panel-kicker">Neler yapabilirim?</p>
+            <h3>Bilet takibini senin yerine ben yapıyorum.</h3>
+            <p>Seçtiğin rota ve saat için sistemi düzenli aralıklarla kontrol eder, uygun koltuk bulunduğunda seni anında bilgilendiririm.</p>
+            <div class="hero-points">
+              <span>Periyodik otomatik arama</span>
+              <span>Ekonomi ve Business desteği</span>
+              <span>Telegram, Web ve Sesli bildirim</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>TCDD Bilet Arama Botu · Otomatik takip ve bildirim platformu</p>
+        <p>
+          <a href="/static/pages/iletisim.html">İletişim</a> ·
+          <a href="/static/pages/gizlilik.html">Gizlilik</a> ·
+          <a href="/static/pages/kullanim-kosullari.html">Kullanım Koşulları</a>
+        </p>
+      </div>
+    </footer>
+
+    <section id="how-it-works-modal" class="modal is-hidden" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Nasıl Çalışır?</h3>
+          <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <ol class="modal-steps">
+          <li>Kalkış, varış, tarih ve saat bilgilerini girip aramayı başlatırsın.</li>
+          <li>Sistem TCDD eBilet sayfasını verdiğin aralıkta Selenium ile kontrol eder.</li>
+          <li>Uygun bilet bulununca hem ekranda popup gösterir hem de web bildirimi gönderir.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="ticket-found-modal" class="modal is-hidden" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Bilet Bulundu</h3>
+          <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <p class="modal-text">Seçtiğin kriterlere uygun bilet bulundu. TCDD eBilet üzerinden satın alma adımına geçebilirsin.</p>
+      </div>
+    </section>
+
+    <datalist id="stations">
+      {% for station in stations %}
+      <option value="{{ station }}"></option>
+      {% endfor %}
+    </datalist>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+  </html>

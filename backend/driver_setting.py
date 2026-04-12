@@ -6,6 +6,7 @@ import ctypes
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -31,6 +32,12 @@ def cleanup_temp_user_data_dir(temp_dir, logger=None):
 
 
 def cleanup_msedgedriver_processes(logger=None):
+    # NOTE:
+    # Killing all msedgedriver processes can terminate sessions started by
+    # another worker/process (for example Flask debug reloader parent/child).
+    # Keep this opt-in for manual recovery scenarios only.
+    if os.environ.get("TCDD_FORCE_KILL_MSEDGEDRIVER", "0") != "1":
+        return
     if platform.system() != "Windows":
         return
     try:
@@ -73,16 +80,21 @@ def cleanup_webdriver_runtime(driver, logger=None):
 class DriverSetting:
     """Driver'ı ayarlar."""
 
-    def __init__(self):
+    def __init__(self, logger=None):
         self.driver = None
         self.temp_user_data_dir = None
-        if not logging.getLogger().handlers:
+        if logger is not None:
+            self.logger = logger
+        elif not logging.getLogger().handlers:
             logging.basicConfig(
                 filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                encoding="utf-8",
             )
-        self.logger = logging.getLogger(__name__)
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logging.getLogger(__name__)
 
     def _notify_user(self, message, title="TCDD Bilet"):
         try:
@@ -94,6 +106,8 @@ class DriverSetting:
         options = EdgeOptions()
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--window-size=640,480")
+        options.add_argument("--window-position=0,0")
 
         self.temp_user_data_dir = tempfile.mkdtemp(prefix="tcdd-edge-")
         options.add_argument(f"--user-data-dir={self.temp_user_data_dir}")
@@ -157,9 +171,9 @@ class DriverSetting:
         try:
             command = [driver_path, "--version"]
             output = subprocess.check_output(command, text=True).strip()
-            parts = output.split()
-            if len(parts) >= 2:
-                return parts[1]
+            match = re.search(r"(\d+\.\d+\.\d+\.\d+)", output)
+            if match:
+                return match.group(1)
         except Exception as exc:
             self.logger.debug(f"Driver sürümü okunamadı ({driver_path}): {exc}")
         return None
@@ -200,11 +214,34 @@ class DriverSetting:
             setattr(driver, "_tcdd_temp_user_data_dir", self.temp_user_data_dir)
         return driver
 
+    def _enforce_window_geometry(self, driver):
+        if not driver:
+            return
+        try:
+            driver.set_window_rect(x=0, y=0, width=640, height=480)
+            rect = driver.get_window_rect()
+            self.logger.info(
+                "WebDriver pencere boyutu uygulandi: "
+                f"{rect.get('width')}x{rect.get('height')} @ "
+                f"({rect.get('x')},{rect.get('y')})"
+            )
+        except Exception as exc:
+            self.logger.warning(f"WebDriver pencere boyutu uygulanamadi: {exc}")
+
     def _start_with_service(self, options, driver_path):
         service = EdgeService(driver_path)
         self.driver = Edge(service=service, options=options)
+        self._enforce_window_geometry(self.driver)
         self._attach_runtime_metadata(self.driver)
-        self.logger.info(f"Edge driver başlatıldı: {driver_path}")
+        try:
+            rect = self.driver.get_window_rect()
+            self.logger.info(
+                "Edge driver baslatildi: "
+                f"{driver_path} | rect={rect.get('width')}x{rect.get('height')} "
+                f"@ ({rect.get('x')},{rect.get('y')})"
+            )
+        except Exception:
+            self.logger.info(f"Edge driver baslatildi: {driver_path}")
         return self.driver
 
     def _download_driver_from_url(self, url, destination_path):
@@ -279,7 +316,6 @@ class DriverSetting:
 
     def driver_init(self):
         try:
-            cleanup_msedgedriver_processes(self.logger)
             options = self._build_options()
 
             local_driver = self._ensure_local_driver()
@@ -293,8 +329,17 @@ class DriverSetting:
 
             try:
                 self.driver = Edge(options=options)
+                self._enforce_window_geometry(self.driver)
                 self._attach_runtime_metadata(self.driver)
-                self.logger.info("Edge, Selenium Manager ile başlatıldı.")
+                try:
+                    rect = self.driver.get_window_rect()
+                    self.logger.info(
+                        "Edge, Selenium Manager ile baslatildi. "
+                        f"rect={rect.get('width')}x{rect.get('height')} "
+                        f"@ ({rect.get('x')},{rect.get('y')})"
+                    )
+                except Exception:
+                    self.logger.info("Edge, Selenium Manager ile baslatildi.")
                 return self.driver
             except Exception as selenium_manager_err:
                 self.logger.warning(

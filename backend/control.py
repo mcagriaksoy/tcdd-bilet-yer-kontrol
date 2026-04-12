@@ -37,12 +37,14 @@ class Control:
         allow_economy=True,
         allow_business=False,
         logger=None,
+        stop_event=None,
     ):
         """Constructor methodu."""
         self.driver = driver
         self.zaman = time
         self.allow_economy = allow_economy
         self.allow_business = allow_business
+        self.stop_event = stop_event
         # logging setup
         if logger is not None:
             self.logger = logger
@@ -56,6 +58,27 @@ class Control:
             self.logger = logging.getLogger(__name__)
         else:
             self.logger = logging.getLogger(__name__)
+
+    def _is_stop_requested(self):
+        return bool(self.stop_event and self.stop_event.is_set())
+
+    @staticmethod
+    def _normalize_label(text):
+        raw = (text or "").strip().upper()
+        replacements = {
+            "Ä°": "I",
+            "İ": "I",
+            "İ": "I",
+            "Ş": "S",
+            "Ğ": "G",
+            "Ü": "U",
+            "Ö": "O",
+            "Ç": "C",
+            "Â": "A",
+        }
+        for source, target in replacements.items():
+            raw = raw.replace(source, target)
+        return raw
 
     def _notify_user(self, message, title="TCDD Bilet"):
         try:
@@ -110,7 +133,13 @@ class Control:
                                 f"\nRow {row}: Saat elementi bos geldi, atlaniyor..."
                             )
                             continue
-                        aranan = aranan_element.text
+                        aranan = (aranan_element.text or "").strip()
+                        self.logger.info(
+                            "Sefer satiri okundu: row=%s saat=%s hedef=%s",
+                            row,
+                            aranan,
+                            self.zaman,
+                        )
                     except (
                         TimeoutException,
                         AttributeError,
@@ -149,10 +178,17 @@ class Control:
                                     )
                                     .text
                                 )
-                                print(f"Index: {index}, Text: {text}")
-                                if text == "EKONOMÄ°":
+                                normalized_text = self._normalize_label(text)
+                                self.logger.info(
+                                    "Kabin tipi metni: row=%s index=%s raw=%s normalized=%s",
+                                    row,
+                                    index,
+                                    text,
+                                    normalized_text,
+                                )
+                                if "EKONOM" in normalized_text:
                                     economy_row = index
-                                elif text == "BUSÄ°NESS":
+                                elif "BUSINESS" in normalized_text:
                                     business_row = index
                             except (
                                 TimeoutException,
@@ -160,6 +196,18 @@ class Control:
                                 StaleElementReferenceException,
                             ):
                                 print(f"Index {index} not found, skipping...")
+                                self.logger.info(
+                                    "Kabin tipi okunamadi: row=%s index=%s",
+                                    row,
+                                    index,
+                                )
+
+                        self.logger.info(
+                            "Kabin tipi satirlari: row=%s economy_row=%s business_row=%s",
+                            row,
+                            economy_row,
+                            business_row,
+                        )
 
                         if economy_row == 0:
                             sys.stdout.write(
@@ -210,8 +258,11 @@ class Control:
                             )
                             return ErrCodes.TEKRAR_DENE
 
-                        print(
-                            f"Economy Seat: {economy_seat}, Business Seat: {business_seat}"
+                        self.logger.info(
+                            "Koltuk metinleri: row=%s economy_text=%s business_text=%s",
+                            row,
+                            economy_seat,
+                            business_seat,
                         )
 
                         try:
@@ -226,6 +277,15 @@ class Control:
                                 "\nKoltuk bilgisi dÃ¶nÃ¼ÅŸtÃ¼rÃ¼lemedi, tekrar denenecek!"
                             )
                             return ErrCodes.TEKRAR_DENE
+
+                        self.logger.info(
+                            "Koltuk sayilari: row=%s economy=%s business=%s allow_economy=%s allow_business=%s",
+                            row,
+                            economy_seat,
+                            business_seat,
+                            self.allow_economy,
+                            self.allow_business,
+                        )
 
                         economy_match = self.allow_economy and economy_seat > 0
                         business_match = self.allow_business and business_seat > 0
@@ -253,6 +313,12 @@ class Control:
                         return ErrCodes.TEKRAR_DENE
 
                 self.kill_driver()
+                self.logger.info(
+                    "Hedef saat bulunamadi: hedef=%s allow_economy=%s allow_business=%s",
+                    self.zaman,
+                    self.allow_economy,
+                    self.allow_business,
+                )
                 return ErrCodes.SAAT_HATASI
             else:
                 sys.stdout.write("\nAradÄ±ÄŸÄ±nÄ±z seferde boÅŸ yer yoktur...")
@@ -267,7 +333,8 @@ class Control:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after InvalidSessionIdException")
-            self._notify_user("TarayÄ±cÄ± oturumu kapandÄ± veya baÄŸlantÄ± koptu.", "Oturum Koptu")
+            if not self._is_stop_requested():
+                self._notify_user("TarayÄ±cÄ± oturumu kapandÄ± veya baÄŸlantÄ± koptu.", "Oturum Koptu")
             return ErrCodes.TIMEOUT_HATASI
         except TimeoutException:
             msg = "Zaman aÅŸÄ±mÄ±na uÄŸradÄ±..."
@@ -277,7 +344,8 @@ class Control:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after TimeoutException")
-            self._notify_user(msg, "Timeout HatasÄ±")
+            if not self._is_stop_requested():
+                self._notify_user(msg, "Timeout HatasÄ±")
             return ErrCodes.TIMEOUT_HATASI
         except NoSuchElementException:
             msg = "Aranan saat ya da sefer bulunamadÄ±..."
@@ -287,7 +355,8 @@ class Control:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after NoSuchElementException")
-            self._notify_user(msg, "Element BulunamadÄ±")
+            if not self._is_stop_requested():
+                self._notify_user(msg, "Element BulunamadÄ±")
             return ErrCodes.TEKRAR_DENE
         except UnexpectedAlertPresentException:
             msg = "GÃ¼zergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
@@ -297,7 +366,8 @@ class Control:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after UnexpectedAlertPresentException")
-            self._notify_user(msg, "GÃ¼zergah HatasÄ±")
+            if not self._is_stop_requested():
+                self._notify_user(msg, "GÃ¼zergah HatasÄ±")
             return ErrCodes.GUZERGAH_HATASI
         except ConnectionAbortedError:
             self.kill_driver()
@@ -322,6 +392,7 @@ class Control:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after generic exception")
-            self._notify_user(msg, "Bilinmeyen Hata")
+            if not self._is_stop_requested():
+                self._notify_user(msg, "Bilinmeyen Hata")
             return ErrCodes.TEKRAR_DENE
 

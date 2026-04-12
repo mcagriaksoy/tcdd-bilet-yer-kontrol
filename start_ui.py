@@ -237,6 +237,29 @@ class LauncherApp:
     def _is_running(process):
         return process is not None and process.poll() is None
 
+    def _cleanup_stale_web_processes(self):
+        if os.name != "nt":
+            return
+        script = (
+            "$procs = Get-CimInstance Win32_Process | "
+            "Where-Object { $_.Name -eq 'python.exe' -and $_.CommandLine -match '-m webapp.main' }; "
+            "foreach($p in $procs){ "
+            "try { Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop; Write-Output $p.ProcessId } "
+            "catch {} }"
+        )
+        try:
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-Command", script],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            killed = [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
+            if killed:
+                self._log(f"Eski web süreçleri temizlendi: {', '.join(killed)}")
+        except Exception as exc:
+            self._log(f"Eski web süreçleri temizlenemedi: {exc}")
+
     def _start_process(self, command, cwd, app_name, log_attr):
         existing = self.web_process if app_name == "web" else self.desktop_process
         if self._is_running(existing):
@@ -324,6 +347,8 @@ class LauncherApp:
 
     def start_web(self):
         was_running = self._is_running(self.web_process)
+        if not was_running:
+            self._cleanup_stale_web_processes()
         self._start_process(
             [sys.executable, "-m", "webapp.main"],
             PROJECT_ROOT,
@@ -347,6 +372,7 @@ class LauncherApp:
 
     def stop_web(self):
         self._stop_process("web")
+        self._cleanup_stale_web_processes()
 
     def stop_desktop(self):
         self._stop_process("desktop")

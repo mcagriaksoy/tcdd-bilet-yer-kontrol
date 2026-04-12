@@ -1,4 +1,9 @@
-﻿# TCDD Bilet Yer Kontrol
+﻿[![mcagriaksoy - tcdd-bilet-yer-kontrol](https://img.shields.io/static/v1?label=mcagriaksoy&message=tcdd-bilet-yer-kontrol&color=red&logo=github)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol "Go to GitHub repo")
+[![stars - tcdd-bilet-yer-kontrol](https://img.shields.io/github/stars/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol)
+[![forks - tcdd-bilet-yer-kontrol](https://img.shields.io/github/forks/mcagriaksoy/tcdd-bilet-yer-kontrol?style=social)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol)
+[![GitHub release](https://img.shields.io/github/release/mcagriaksoy/tcdd-bilet-yer-kontrol?include_prereleases=&sort=semver&color=red)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases/)
+[![License](https://img.shields.io/badge/License-GPL--3.0--1-red)](#license)
+[![issues - tcdd-bilet-yer-kontrol](https://img.shields.io/github/issues/mcagriaksoy/tcdd-bilet-yer-kontrol)](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/issues)
 
 Bu proje TCDD eBilet tarafinda secilen rota/saat icin bos koltuk durumunu periyodik olarak kontrol eder. Bu uygulama, yolcuların bilet bilgilerini hızlı ve kolay bir şekilde aramalarina ve doğrulamalarına olanak tanır.
 
@@ -121,3 +126,5 @@ Paket kurulduktan sonra gelen komutlar:
 ## Lisans
 
 Proje GPL-3.0 ile lisanslidir. Detay: `LICENSE`.
+
+<a href="https://www.buymeacoffee.com/mcagriaksoy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>

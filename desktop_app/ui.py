@@ -237,7 +237,7 @@ def main():
         try:
             datetime.strptime(saat, "%H:%M")
         except ValueError as exc:
-            raise ValueError("Saat formatı ss:dd olmalı. rnek: 12:30") from exc
+            raise ValueError("Saat formatı ss:dd olmalı. Örnek: 12:30") from exc
 
         if telegram_msg_var.get():
             if not bot_token_var.get().strip() or not chat_id_var.get().strip():
@@ -388,7 +388,7 @@ def main():
     ttk.Label(title_column, text="TCDD Bilet Yer Kontrol", style="Title.TLabel").pack(anchor="w")
     ttk.Label(
         title_column,
-        text="Daha temiz bir akı, iyiletirilmi kontroller ve sürüm takibi tek ekranda.",
+        text="Daha temiz bir akış, iyileştirilmiş kontroller ve sürüm takibi tek ekranda.",
         style="Muted.TLabel",
     ).pack(anchor="w", pady=(4, 0))
 
@@ -475,7 +475,7 @@ def main():
     ).grid(row=3, column=1, sticky="w")
     ttk.Label(route_grid, text="Saat", style="Section.TLabel").grid(row=2, column=2, sticky="w", pady=(14, 4))
     ttk.Entry(route_grid, textvariable=saat_var, width=18).grid(row=3, column=2, sticky="ew", padx=(0, 10))
-    ttk.Label(route_grid, text="rnek 12:30", style="CardText.TLabel").grid(row=3, column=3, sticky="w")
+    ttk.Label(route_grid, text="Örnek 12:30", style="CardText.TLabel").grid(row=3, column=3, sticky="w")
 
     preferences_frame = ttk.LabelFrame(content_frame, text="Arama Tercihleri", style="Card.TLabelframe")
     preferences_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
@@ -515,7 +515,7 @@ def main():
 
     controls_top = ttk.Frame(controls_frame, style="CardInner.TFrame")
     controls_top.pack(fill=tk.X, pady=(0, 10))
-    btn_start = ttk.Button(controls_top, text="Aramayı Balat", style="Primary.TButton")
+    btn_start = ttk.Button(controls_top, text="Aramayı Başlat", style="Primary.TButton")
     btn_start.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
     btn_stop = ttk.Button(controls_top, text="Durdur", style="Danger.TButton", state=tk.DISABLED)
     btn_stop.pack(side=tk.LEFT)
@@ -553,7 +553,7 @@ def main():
     loader.pack(fill=tk.X, pady=(0, 10))
     ttk.Label(
         status_frame,
-        text="Uygulama her turda sayfayı açıp seferi kontrol eder. Durdur dediinizde bekleme döngüsü kesilir.",
+        text="Uygulama her turda sayfayı açıp seferi kontrol eder. Durdur dediğinizde bekleme döngüsü kesilir.",
         style="CardText.TLabel",
         wraplength=250,
         justify="left",
@@ -563,7 +563,7 @@ def main():
     footer_frame.pack(fill=tk.X, pady=(8, 0))
     ttk.Label(
         footer_frame,
-        text="Mehmet C. Aksoy tarafından gelitirilen fork sürümü. Açık kaynak topluluuna teekkürler.",
+        text="Mehmet C. Aksoy tarafından geliştirilen fork sürümü. Açık kaynak topluluğuna teşekkürler.",
         style="Muted.TLabel",
     ).pack(side=tk.LEFT)
 
@@ -667,7 +667,7 @@ def main():
                     )
             except (HTTPError, URLError, TimeoutError, ValueError) as exc:
                 error_text = str(exc)
-                root.after(0, lambda: update_status_var.set("Surum kontrolu yapilamadi"))
+                root.after(0, lambda: update_status_var.set("Sürüm kontrolü yapılamadı"))
                 root.after(0, lambda: update_detail_var.set(f"Baglanti hatasi: {error_text}"))
                 if show_message:
                     root.after(
@@ -714,12 +714,12 @@ def main():
             while not g_isStopped:
                 attempt += 1
                 set_run_status(f"Deneme {attempt} çalııyor")
-                append_log(f"Deneme #{attempt} balatıldı.")
+                append_log(f"Deneme #{attempt} başlatıldı.")
 
                 driver = driver_setting()
                 if driver is None:
-                    append_log("Tarayıcı balatılamadı. Edge ve sürücü kurulumunu kontrol edin.")
-                    set_run_status("Tarayıcı balatılamadı")
+                    append_log("Tarayıcı başlatılamadı. Edge ve sürücü kurulumunu kontrol edin.")
+                    set_run_status("Tarayıcı başlatılamadı")
                     break
 
                 try:

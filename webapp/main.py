@@ -1,4 +1,5 @@
 import sys
+import os
 
 from webapp import create_app
 
@@ -17,7 +18,13 @@ def _force_utf8_stdio():
 
 def main():
     _force_utf8_stdio()
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(
+        debug=debug_mode,
+        use_reloader=False,
+        host="127.0.0.1",
+        port=5000,
+    )
 
 
 if __name__ == "__main__":

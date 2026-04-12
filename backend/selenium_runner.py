@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import logging
 import os
+import inspect
+import sys
 from datetime import datetime
 from time import sleep
+
+from selenium.common.exceptions import InvalidSessionIdException, NoSuchWindowException, TimeoutException
 
 from .control import Control
 from .driver_get import DriverGet
@@ -99,6 +103,14 @@ def validate_payload(payload):
 def run_check_loop(payload, stop_event, log, update):
     payload = validate_payload(payload)
     logger = _build_logger()
+    logger.info(
+        "Runtime source: python=%s driver_setting=%s driver_get=%s control=%s route=%s",
+        sys.executable,
+        inspect.getsourcefile(DriverSetting),
+        inspect.getsourcefile(DriverGet),
+        inspect.getsourcefile(Control),
+        inspect.getsourcefile(Rota),
+    )
     attempt = 0
 
     while not stop_event.is_set():
@@ -113,7 +125,11 @@ def run_check_loop(payload, stop_event, log, update):
 
         try:
             log("TCDD sayfasi yukleniyor...")
-            DriverGet(driver, logger=logger).driver_get()
+            try:
+                DriverGet(driver, logger=logger).driver_get()
+            except (NoSuchWindowException, InvalidSessionIdException, TimeoutException) as exc:
+                log(f"Tarayici oturumu acilis asamasinda koptu ({exc}). Yeni deneme yapilacak.")
+                continue
             if stop_event.is_set():
                 return None
 
@@ -135,6 +151,7 @@ def run_check_loop(payload, stop_event, log, update):
                 allow_economy=payload["allow_economy"],
                 allow_business=payload["allow_business"],
                 logger=logger,
+                stop_event=stop_event,
             ).sayfa_kontrol()
 
             if result == BASARILI:

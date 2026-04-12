@@ -22,13 +22,14 @@ from webbrowser import open as wbopen
 from selenium.common.exceptions import InvalidSessionIdException
 from tkcalendar import DateEntry
 
-import Control
-import DriverGet
-import DriverSetting
-import Rota
-import Sehirler
-import TelegramMsg
-import error_codes as ErrCodes
+
+from backend import control as Control
+from backend import driver_get as DriverGet
+from backend import driver_setting as DriverSetting
+from backend import error_codes as ErrCodes
+from backend import route as Rota
+from backend import stations as Sehirler
+from backend import telegram_msg as TelegramMsg
 
 if platform.system() == "Windows":
     import winsound
@@ -218,9 +219,9 @@ def main():
         allow_economy = ekonomi_var.get()
 
         if not nereden or not nereye:
-            raise ValueError("Lütfen kalkış ve varış istasyonlarını seçin.")
+            raise ValueError("Lütfen kalkı ve varı istasyonlarını seçin.")
         if nereden == nereye:
-            raise ValueError("Kalkış ve varış istasyonları aynı olamaz.")
+            raise ValueError("Kalkı ve varı istasyonları aynı olamaz.")
         if not (allow_business or allow_economy):
             raise ValueError("En az bir bilet tipi seçin.")
         if not tarih:
@@ -236,7 +237,7 @@ def main():
         try:
             datetime.strptime(saat, "%H:%M")
         except ValueError as exc:
-            raise ValueError("Saat formatı ss:dd olmalı. Örnek: 12:30") from exc
+            raise ValueError("Saat formatı ss:dd olmalı. rnek: 12:30") from exc
 
         if telegram_msg_var.get():
             if not bot_token_var.get().strip() or not chat_id_var.get().strip():
@@ -261,7 +262,7 @@ def main():
         }
 
     root = tk.Tk()
-    root.title(f"TCDD Otomatik Bilet Arama Botu")
+    root.title("TCDD Otomatik Bilet Arama Botu")
     root.configure(bg=APP_BG)
     root.resizable(False, False)
     try:
@@ -360,7 +361,7 @@ def main():
     current_date = date.today().strftime("%d.%m.%Y")
     current_time = datetime.now().strftime("%H:%M")
 
-    nereden_var = tk.StringVar(value="Eskişehir")
+    nereden_var = tk.StringVar(value="Eskiehir")
     nereye_var = tk.StringVar(value="Ankara Gar")
     tarih_var = tk.StringVar(value=current_date)
     saat_var = tk.StringVar(value=current_time)
@@ -387,7 +388,7 @@ def main():
     ttk.Label(title_column, text="TCDD Bilet Yer Kontrol", style="Title.TLabel").pack(anchor="w")
     ttk.Label(
         title_column,
-        text="Daha temiz bir akış, iyileştirilmiş kontroller ve sürüm takibi tek ekranda.",
+        text="Daha temiz bir akı, iyiletirilmi kontroller ve sürüm takibi tek ekranda.",
         style="Muted.TLabel",
     ).pack(anchor="w", pady=(4, 0))
 
@@ -474,7 +475,7 @@ def main():
     ).grid(row=3, column=1, sticky="w")
     ttk.Label(route_grid, text="Saat", style="Section.TLabel").grid(row=2, column=2, sticky="w", pady=(14, 4))
     ttk.Entry(route_grid, textvariable=saat_var, width=18).grid(row=3, column=2, sticky="ew", padx=(0, 10))
-    ttk.Label(route_grid, text="Örnek 12:30", style="CardText.TLabel").grid(row=3, column=3, sticky="w")
+    ttk.Label(route_grid, text="rnek 12:30", style="CardText.TLabel").grid(row=3, column=3, sticky="w")
 
     preferences_frame = ttk.LabelFrame(content_frame, text="Arama Tercihleri", style="Card.TLabelframe")
     preferences_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
@@ -485,7 +486,7 @@ def main():
     ttk.Checkbutton(seat_type_row, text="Ekonomi", variable=ekonomi_var).pack(side=tk.LEFT, padx=(0, 18))
     ttk.Checkbutton(seat_type_row, text="Business", variable=business_var).pack(side=tk.LEFT)
 
-    ttk.Label(preferences_frame, text="Yeniden deneme aralığı", style="Section.TLabel").pack(anchor="w")
+    ttk.Label(preferences_frame, text="Yeniden deneme aralıı", style="Section.TLabel").pack(anchor="w")
     ttk.Scale(preferences_frame, from_=1, to=30, orient=tk.HORIZONTAL, variable=delay_time_var).pack(fill=tk.X, pady=(6, 2))
     delay_time_label = ttk.Label(preferences_frame, text="1 dakika", style="CardText.TLabel")
     delay_time_label.pack(anchor="w")
@@ -514,7 +515,7 @@ def main():
 
     controls_top = ttk.Frame(controls_frame, style="CardInner.TFrame")
     controls_top.pack(fill=tk.X, pady=(0, 10))
-    btn_start = ttk.Button(controls_top, text="Aramayı Başlat", style="Primary.TButton")
+    btn_start = ttk.Button(controls_top, text="Aramayı Balat", style="Primary.TButton")
     btn_start.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
     btn_stop = ttk.Button(controls_top, text="Durdur", style="Danger.TButton", state=tk.DISABLED)
     btn_stop.pack(side=tk.LEFT)
@@ -539,7 +540,7 @@ def main():
         command=lambda: wbopen("https://www.buymeacoffee.com/mcagriaksoy"),
     ).pack(side=tk.LEFT)
 
-    status_frame = ttk.LabelFrame(content_frame, text="Çalışma Durumu", style="Card.TLabelframe")
+    status_frame = ttk.LabelFrame(content_frame, text="alıma Durumu", style="Card.TLabelframe")
     status_frame.grid(row=2, column=1, sticky="nsew")
     ttk.Label(status_frame, text="Canlı durum", style="Section.TLabel").pack(anchor="w")
     ttk.Label(
@@ -552,7 +553,7 @@ def main():
     loader.pack(fill=tk.X, pady=(0, 10))
     ttk.Label(
         status_frame,
-        text="Uygulama her turda sayfayı açıp seferi kontrol eder. Durdur dediğinizde bekleme döngüsü kesilir.",
+        text="Uygulama her turda sayfayı açıp seferi kontrol eder. Durdur dediinizde bekleme döngüsü kesilir.",
         style="CardText.TLabel",
         wraplength=250,
         justify="left",
@@ -562,7 +563,7 @@ def main():
     footer_frame.pack(fill=tk.X, pady=(8, 0))
     ttk.Label(
         footer_frame,
-        text="Mehmet C. Aksoy tarafından geliştirilen fork sürümü. Açık kaynak topluluğuna teşekkürler.",
+        text="Mehmet C. Aksoy tarafından gelitirilen fork sürümü. Açık kaynak topluluuna teekkürler.",
         style="Muted.TLabel",
     ).pack(side=tk.LEFT)
 
@@ -665,14 +666,15 @@ def main():
                         lambda: messagebox.showinfo("Sürüm Kontrolü", f"{status}\n{detail}"),
                     )
             except (HTTPError, URLError, TimeoutError, ValueError) as exc:
-                root.after(0, lambda: update_status_var.set("Sürüm kontrolü yapılamadı"))
-                root.after(0, lambda: update_detail_var.set(f"Bağlantı hatası: {exc}"))
+                error_text = str(exc)
+                root.after(0, lambda: update_status_var.set("Surum kontrolu yapilamadi"))
+                root.after(0, lambda: update_detail_var.set(f"Baglanti hatasi: {error_text}"))
                 if show_message:
                     root.after(
                         0,
                         lambda: messagebox.showwarning(
                             "Sürüm Kontrolü",
-                            "GitHub releases bilgisi şu anda alınamadı.",
+                            "GitHub releases bilgisi u anda alınamadı.",
                         ),
                     )
 
@@ -699,7 +701,7 @@ def main():
             return
 
         append_log(
-            f"Arama başladı: {payload['nereden']} -> {payload['nereye']} | {payload['tarih']} {payload['saat']}"
+            f"Arama baladı: {payload['nereden']} -> {payload['nereye']} | {payload['tarih']} {payload['saat']}"
         )
         set_run_status("Arama aktif")
         set_running(True)
@@ -711,13 +713,13 @@ def main():
 
             while not g_isStopped:
                 attempt += 1
-                set_run_status(f"Deneme {attempt} çalışıyor")
-                append_log(f"Deneme #{attempt} başlatıldı.")
+                set_run_status(f"Deneme {attempt} çalııyor")
+                append_log(f"Deneme #{attempt} balatıldı.")
 
                 driver = driver_setting()
                 if driver is None:
-                    append_log("Tarayıcı başlatılamadı. Edge ve sürücü kurulumunu kontrol edin.")
-                    set_run_status("Tarayıcı başlatılamadı")
+                    append_log("Tarayıcı balatılamadı. Edge ve sürücü kurulumunu kontrol edin.")
+                    set_run_status("Tarayıcı balatılamadı")
                     break
 
                 try:
@@ -735,7 +737,7 @@ def main():
                         payload["tarih"],
                     )
                     if not route_ok:
-                        append_log("Rota bilgileri girilemedi veya işlem durduruldu.")
+                        append_log("Rota bilgileri girilemedi veya ilem durduruldu.")
                         continue
 
                     append_log("Sefer uygunluk kontrolü yapılıyor...")
@@ -757,7 +759,7 @@ def main():
                         set_run_status("Güzergah hatası")
                         break
                 except InvalidSessionIdException as exc:
-                    append_log(f"Tarayıcı oturumu beklenmedik şekilde kapandı: {exc}")
+                    append_log(f"Tarayıcı oturumu beklenmedik ekilde kapandı: {exc}")
                     set_run_status("Tarayıcı oturumu kapandı")
                     safe_driver_quit(driver)
                     break
@@ -796,7 +798,7 @@ def main():
         if os.path.exists(temp_file):
             return
         messagebox.showinfo(
-            "Hoş Geldiniz",
+            "Ho Geldiniz",
             "İlk tarama biraz zaman alabilir. Sürüm kontrolü ve log paneli artık ana ekranda görünebilir.",
         )
         try:
@@ -812,3 +814,5 @@ def main():
 
 def __main__():
     main()
+
+

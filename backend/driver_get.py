@@ -17,19 +17,24 @@ from selenium.common.exceptions import InvalidSessionIdException
 class DriverGet:
     """Driver'ı alır ve sayfayı yükler."""
 
-    def __init__(self, driver, url="https://ebilet.tcddtasimacilik.gov.tr"):
+    def __init__(self, driver, url="https://ebilet.tcddtasimacilik.gov.tr", logger=None):
         if driver is None:
             raise ValueError("Driver cannot be None")
         self.url = url
         self.driver = driver
         # logging setup if not already configured
-        if not logging.getLogger().handlers:
+        if logger is not None:
+            self.logger = logger
+        elif not logging.getLogger().handlers:
             logging.basicConfig(
                 filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                encoding="utf-8",
             )
-        self.logger = logging.getLogger(__name__)
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logging.getLogger(__name__)
 
     def _notify_user(self, message, title="TCDD Bilet"):
         try:

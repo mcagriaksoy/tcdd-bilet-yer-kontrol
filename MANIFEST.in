@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include icon.ico
+recursive-include webapp/templates *.html
+recursive-include webapp/static *
+recursive-include desktop_app *.ico *.png *.txt
+

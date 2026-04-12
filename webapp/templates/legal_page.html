@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} · TCDD Bilet Arama Botu</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('main.favicon') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="{{ url_for('main.index') }}">
+          <div class="brand-mark">
+            <img src="{{ url_for('main.favicon') }}" alt="TCDD Bilet Arama Botu ikonu" class="brand-icon">
+          </div>
+          <div class="brand-copy">
+            <strong>TCDD Bilet Arama Botu</strong>
+            <span>eBilet takibini otomatikleştir</span>
+          </div>
+        </a>
+      </div>
+    </header>
+
+    <main class="page legal-page">
+      <section class="panel legal-panel">
+        <p class="panel-kicker">{{ title }}</p>
+        <h1 class="legal-title">{{ title }}</h1>
+        <p class="subcopy">{{ summary }}</p>
+        <ul class="legal-list">
+          {% for item in items %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>TCDD Bilet Arama Botu · Otomatik takip ve bildirim platformu</p>
+        <p>
+          <a href="{{ url_for('main.legal_page', slug='iletisim') }}">İletişim</a> ·
+          <a href="{{ url_for('main.legal_page', slug='gizlilik') }}">Gizlilik</a> ·
+          <a href="{{ url_for('main.legal_page', slug='kullanim-kosullari') }}">Kullanım Koşulları</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+  </html>

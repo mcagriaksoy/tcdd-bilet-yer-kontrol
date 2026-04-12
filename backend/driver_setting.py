@@ -6,6 +6,7 @@ import ctypes
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -73,16 +74,21 @@ def cleanup_webdriver_runtime(driver, logger=None):
 class DriverSetting:
     """Driver'ı ayarlar."""
 
-    def __init__(self):
+    def __init__(self, logger=None):
         self.driver = None
         self.temp_user_data_dir = None
-        if not logging.getLogger().handlers:
+        if logger is not None:
+            self.logger = logger
+        elif not logging.getLogger().handlers:
             logging.basicConfig(
                 filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                encoding="utf-8",
             )
-        self.logger = logging.getLogger(__name__)
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logging.getLogger(__name__)
 
     def _notify_user(self, message, title="TCDD Bilet"):
         try:
@@ -157,9 +163,9 @@ class DriverSetting:
         try:
             command = [driver_path, "--version"]
             output = subprocess.check_output(command, text=True).strip()
-            parts = output.split()
-            if len(parts) >= 2:
-                return parts[1]
+            match = re.search(r"(\d+\.\d+\.\d+\.\d+)", output)
+            if match:
+                return match.group(1)
         except Exception as exc:
             self.logger.debug(f"Driver sürümü okunamadı ({driver_path}): {exc}")
         return None

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tcdd-bilet-yer-kontrol"
+version = "4.1.0"
+description = "TCDD eBilet icin web ve masaustu koltuk kontrol araci"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+authors = [
+  { name = "Mehmet Cagri Aksoy" }
+]
+dependencies = [
+  "Flask>=3.0,<4.0",
+  "selenium",
+  "webdriver-manager",
+  "tkcalendar"
+]
+
+[project.urls]
+Homepage = "https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"
+Repository = "https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol"
+
+[project.scripts]
+tcdd-launcher = "start_ui:main"
+tcdd-web = "webapp.main:main"
+tcdd-desktop = "desktop_app.main:main"
+
+[tool.setuptools]
+include-package-data = true
+py-modules = ["start_ui"]
+
+[tool.setuptools.packages.find]
+include = ["backend*", "webapp*", "desktop_app*"]
+
+[tool.setuptools.package-data]
+webapp = ["templates/*.html", "static/**/*"]
+desktop_app = ["*.ico", "*.png", "*.txt"]

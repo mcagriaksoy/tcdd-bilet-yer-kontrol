@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Base version @author: Birol Emekli, https://github.com/bymcs
-Enhanced version @author: Mehmet Çağrı Aksoy https://github.com/mcagriaksoy
+Enhanced version @author: Mehmet Ã‡aÄŸrÄ± Aksoy https://github.com/mcagriaksoy
 """
 
 import sys
@@ -13,6 +13,7 @@ import os
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     NoSuchElementException,
+    StaleElementReferenceException,
     TimeoutException,
     UnexpectedAlertPresentException,
     InvalidSessionIdException,
@@ -21,28 +22,40 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-import error_codes as ErrCodes
+from . import error_codes as ErrCodes
 
 MAX_TREN_SAYISI = 22
 
 
 class Control:
-    """Class: Sayfada yer var mı yok mu kontrol eder."""
+    """Class: Sayfada yer var mÄ± yok mu kontrol eder."""
 
-    def __init__(self, driver, time, allow_economy=True, allow_business=False):
+    def __init__(
+        self,
+        driver,
+        time,
+        allow_economy=True,
+        allow_business=False,
+        logger=None,
+    ):
         """Constructor methodu."""
         self.driver = driver
         self.zaman = time
         self.allow_economy = allow_economy
         self.allow_business = allow_business
         # logging setup
-        if not logging.getLogger().handlers:
+        if logger is not None:
+            self.logger = logger
+        elif not logging.getLogger().handlers:
             logging.basicConfig(
                 filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                encoding="utf-8",
             )
-        self.logger = logging.getLogger(__name__)
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logging.getLogger(__name__)
 
     def _notify_user(self, message, title="TCDD Bilet"):
         try:
@@ -51,7 +64,7 @@ class Control:
             self.logger.debug("Popup failed")
 
     def kill_driver(self):
-        """Driver'ı kapatır."""
+        """Driver'Ä± kapatÄ±r."""
         try:
             # Protect against calling methods on a closed/invalid session
             if self.driver:
@@ -71,12 +84,12 @@ class Control:
                         self.logger.debug("quit failed or session invalid")
                 else:
                     self.logger.debug("Driver session_id is None or invalid; skipping close/quit.")
-            self.logger.info("Driver kapatma işlemi tamamlandı (guarded).")
+            self.logger.info("Driver kapatma iÅŸlemi tamamlandÄ± (guarded).")
         except Exception as e:
-            self.logger.exception(f"Kill driver sırasında hata: {e}")
+            self.logger.exception(f"Kill driver sÄ±rasÄ±nda hata: {e}")
 
     def sayfa_kontrol(self):
-        """Sayfada yer var mı yok mu kontrol eder."""
+        """Sayfada yer var mÄ± yok mu kontrol eder."""
         try:
             element = WebDriverWait(self.driver, 5).until(
                 EC.visibility_of_element_located(
@@ -92,10 +105,19 @@ class Control:
                         aranan_element = WebDriverWait(self.driver, 10).until(
                             EC.visibility_of_element_located((By.XPATH, xpath))
                         )
+                        if aranan_element is None:
+                            sys.stdout.write(
+                                f"\nRow {row}: Saat elementi bos geldi, atlaniyor..."
+                            )
+                            continue
                         aranan = aranan_element.text
-                    except TimeoutException:
+                    except (
+                        TimeoutException,
+                        AttributeError,
+                        StaleElementReferenceException,
+                    ):
                         sys.stdout.write(
-                            f"\nRow {row}: Saat bilgisi alınamadı, atlanıyor..."
+                            f"\nRow {row}: Saat bilgisi alÄ±namadÄ±, atlanÄ±yor..."
                         )
                         continue
 
@@ -108,7 +130,7 @@ class Control:
                             element.click()
                         except (TimeoutException, ElementClickInterceptedException):
                             sys.stdout.write(
-                                "\nSaat seçimi sırasında hata oluştu, tekrar denenecek!"
+                                "\nSaat seÃ§imi sÄ±rasÄ±nda hata oluÅŸtu, tekrar denenecek!"
                             )
                             return ErrCodes.TEKRAR_DENE
 
@@ -128,16 +150,20 @@ class Control:
                                     .text
                                 )
                                 print(f"Index: {index}, Text: {text}")
-                                if text == "EKONOMİ":
+                                if text == "EKONOMÄ°":
                                     economy_row = index
-                                elif text == "BUSİNESS":
+                                elif text == "BUSÄ°NESS":
                                     business_row = index
-                            except TimeoutException:
+                            except (
+                                TimeoutException,
+                                AttributeError,
+                                StaleElementReferenceException,
+                            ):
                                 print(f"Index {index} not found, skipping...")
 
                         if economy_row == 0:
                             sys.stdout.write(
-                                "\nAradığınız seferde ekonomi ya da business koltuğu bulunamadı!"
+                                "\nAradÄ±ÄŸÄ±nÄ±z seferde ekonomi ya da business koltuÄŸu bulunamadÄ±!"
                             )
                             return ErrCodes.TEKRAR_DENE
 
@@ -174,9 +200,13 @@ class Control:
                                     )
                                     .text
                                 )
-                        except TimeoutException:
+                        except (
+                            TimeoutException,
+                            AttributeError,
+                            StaleElementReferenceException,
+                        ):
                             sys.stdout.write(
-                                "\nKoltuk bilgisi alınamadı, tekrar denenecek!"
+                                "\nKoltuk bilgisi alÄ±namadÄ±, tekrar denenecek!"
                             )
                             return ErrCodes.TEKRAR_DENE
 
@@ -193,7 +223,7 @@ class Control:
                             )
                         except ValueError:
                             sys.stdout.write(
-                                "\nKoltuk bilgisi dönüştürülemedi, tekrar denenecek!"
+                                "\nKoltuk bilgisi dÃ¶nÃ¼ÅŸtÃ¼rÃ¼lemedi, tekrar denenecek!"
                             )
                             return ErrCodes.TEKRAR_DENE
 
@@ -225,49 +255,49 @@ class Control:
                 self.kill_driver()
                 return ErrCodes.SAAT_HATASI
             else:
-                sys.stdout.write("\nAradığınız seferde boş yer yoktur...")
+                sys.stdout.write("\nAradÄ±ÄŸÄ±nÄ±z seferde boÅŸ yer yoktur...")
                 self.kill_driver()
                 return ErrCodes.TEKRAR_DENE
         except InvalidSessionIdException as ise:
             # Browser/session closed unexpectedly -> log, notify, cleanup and return retry
-            msg = f"Tarayıcı oturumu geçersiz: {ise}"
+            msg = f"TarayÄ±cÄ± oturumu geÃ§ersiz: {ise}"
             sys.stdout.write("\n" + msg)
             self.logger.exception(msg)
             try:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after InvalidSessionIdException")
-            self._notify_user("Tarayıcı oturumu kapandı veya bağlantı koptu.", "Oturum Koptu")
+            self._notify_user("TarayÄ±cÄ± oturumu kapandÄ± veya baÄŸlantÄ± koptu.", "Oturum Koptu")
             return ErrCodes.TIMEOUT_HATASI
         except TimeoutException:
-            msg = "Zaman aşımına uğradı..."
+            msg = "Zaman aÅŸÄ±mÄ±na uÄŸradÄ±..."
             sys.stdout.write("\n" + msg)
             self.logger.exception(msg)
             try:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after TimeoutException")
-            self._notify_user(msg, "Timeout Hatası")
+            self._notify_user(msg, "Timeout HatasÄ±")
             return ErrCodes.TIMEOUT_HATASI
         except NoSuchElementException:
-            msg = "Aranan saat ya da sefer bulunamadı..."
+            msg = "Aranan saat ya da sefer bulunamadÄ±..."
             sys.stdout.write("\n" + msg)
             self.logger.exception(msg)
             try:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after NoSuchElementException")
-            self._notify_user(msg, "Element Bulunamadı")
+            self._notify_user(msg, "Element BulunamadÄ±")
             return ErrCodes.TEKRAR_DENE
         except UnexpectedAlertPresentException:
-            msg = "Güzergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
+            msg = "GÃ¼zergah bilgilerinde hata meydana geldi. Kontrol ederek tekrar deneyiniz."
             sys.stdout.write("\n" + msg)
             self.logger.exception(msg)
             try:
                 self.kill_driver()
             except Exception:
                 self.logger.debug("kill_driver failed after UnexpectedAlertPresentException")
-            self._notify_user(msg, "Güzergah Hatası")
+            self._notify_user(msg, "GÃ¼zergah HatasÄ±")
             return ErrCodes.GUZERGAH_HATASI
         except ConnectionAbortedError:
             self.kill_driver()
@@ -276,7 +306,16 @@ class Control:
             self.kill_driver()
             return ErrCodes.INTERNET_HATASI
         except Exception as e:
-            msg = f"Bilinmeyen bir hata oluştu: {e}"
+            if "is_displayed" in str(e):
+                msg = "Saat satiri okunamadi, sefer saati bulunamadi kabul edildi."
+                sys.stdout.write("\n" + msg)
+                self.logger.exception(msg)
+                try:
+                    self.kill_driver()
+                except Exception:
+                    self.logger.debug("kill_driver failed after is_displayed error")
+                return ErrCodes.SAAT_HATASI
+            msg = f"Bilinmeyen bir hata oluÅŸtu: {e}"
             sys.stdout.write("\n" + msg)
             self.logger.exception(msg)
             try:
@@ -285,3 +324,4 @@ class Control:
                 self.logger.debug("kill_driver failed after generic exception")
             self._notify_user(msg, "Bilinmeyen Hata")
             return ErrCodes.TEKRAR_DENE
+

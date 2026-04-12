@@ -309,3 +309,5 @@ sehir_listesi = [
     "Şefkat",
     "Şerbettar",
 ]
+
+STATIONS = sehir_listesi

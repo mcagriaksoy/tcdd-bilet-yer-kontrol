@@ -32,6 +32,14 @@ Not:
 - Selenium + Edge kullanildigi icin sistemde Microsoft Edge ve uygun `msedgedriver` olmalidir.
 - Proje kokunde `msedgedriver.exe` varsa dogrudan kullanilir.
 
+## Windows EXE (Hazir Surum)
+
+Kurulum yapmadan kullanmak isteyenler son hazir `.exe` surumunu GitHub Releases sayfasindan indirebilir:
+
+- https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/releases
+
+Releases sayfasindan en guncel surumdeki `start_ui.exe` dosyasini indirip calistirabilirsiniz.
+
 ## Calistirma
 
 Launcher UI (onerilen):

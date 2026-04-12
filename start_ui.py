@@ -1,6 +1,7 @@
 ﻿import os
 import subprocess
 import sys
+import tempfile
 import tkinter as tk
 import webbrowser
 from datetime import datetime
@@ -9,8 +10,13 @@ from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-WEB_LOG_PATH = PROJECT_ROOT / "web_launcher.log"
-DESKTOP_LOG_PATH = PROJECT_ROOT / "desktop_launcher.log"
+APP_HOME = (
+    Path(sys.executable).resolve().parent
+    if getattr(sys, "frozen", False)
+    else PROJECT_ROOT
+)
+WEB_LOG_PATH = APP_HOME / "web_launcher.log"
+DESKTOP_LOG_PATH = APP_HOME / "desktop_launcher.log"
 
 
 class LauncherApp:
@@ -122,6 +128,8 @@ class LauncherApp:
 
     def _set_window_icon(self):
         icon_candidates = [
+            APP_HOME / "icon.ico",
+            APP_HOME / "desktop_app" / "icon.ico",
             PROJECT_ROOT / "icon.ico",
             PROJECT_ROOT / "desktop_app" / "icon.ico",
         ]
@@ -268,7 +276,14 @@ class LauncherApp:
             return existing
 
         log_path = WEB_LOG_PATH if app_name == "web" else DESKTOP_LOG_PATH
-        log_file = open(log_path, "a", encoding="utf-8")
+        try:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_file = open(log_path, "a", encoding="utf-8")
+        except OSError:
+            fallback_dir = Path(tempfile.gettempdir()) / "tcdd-launcher-logs"
+            fallback_dir.mkdir(parents=True, exist_ok=True)
+            log_path = fallback_dir / log_path.name
+            log_file = open(log_path, "a", encoding="utf-8")
 
         kwargs = {
             "cwd": str(cwd),
@@ -284,7 +299,13 @@ class LauncherApp:
         if os.name == "nt":
             kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
 
-        process = subprocess.Popen(command, **kwargs)
+        try:
+            process = subprocess.Popen(command, **kwargs)
+        except Exception:
+            if log_file and not log_file.closed:
+                log_file.close()
+            raise
+
         setattr(self, log_attr, log_file)
 
         if app_name == "web":
@@ -349,22 +370,41 @@ class LauncherApp:
         was_running = self._is_running(self.web_process)
         if not was_running:
             self._cleanup_stale_web_processes()
-        self._start_process(
-            [sys.executable, "-m", "webapp.main"],
-            PROJECT_ROOT,
-            "web",
-            "web_log",
-        )
+        if getattr(sys, "frozen", False):
+            command = [sys.executable, "--run-web"]
+        else:
+            command = [sys.executable, "-m", "webapp.main"]
+        try:
+            self._start_process(
+                command,
+                APP_HOME,
+                "web",
+                "web_log",
+            )
+        except Exception as exc:
+            self.web_status.set("Web Uygulaması: Başlatılamadı")
+            self._log(f"Web uygulaması başlatılamadı: {exc}")
+            self._update_open_web_button_state()
+            return
         if not was_running and self._is_running(self.web_process):
             self.open_web()
 
     def start_desktop(self):
-        self._start_process(
-            [sys.executable, "-m", "desktop_app.main"],
-            PROJECT_ROOT,
-            "desktop",
-            "desktop_log",
-        )
+        if getattr(sys, "frozen", False):
+            command = [sys.executable, "--run-desktop"]
+        else:
+            command = [sys.executable, "-m", "desktop_app.main"]
+        try:
+            self._start_process(
+                command,
+                APP_HOME,
+                "desktop",
+                "desktop_log",
+            )
+        except Exception as exc:
+            self.desktop_status.set("Masaüstü Uygulaması: Başlatılamadı")
+            self._log(f"Masaüstü uygulaması başlatılamadı: {exc}")
+            return
 
     def start_both(self):
         self.start_web()
@@ -412,9 +452,28 @@ class LauncherApp:
 
 
 def main():
+    if APP_HOME.exists():
+        os.chdir(APP_HOME)
+
+    if "--run-web" in sys.argv:
+        from webapp.main import main as web_main
+
+        web_main()
+        return
+
+    if "--run-desktop" in sys.argv:
+        from desktop_app.main import main as desktop_main
+
+        desktop_main()
+        return
+
     app = LauncherApp()
     app.root.mainloop()
 
 
 if __name__ == "__main__":
     main()
+
+
+
+

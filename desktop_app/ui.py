@@ -76,7 +76,7 @@ def read_current_version():
             return match.group(1)
     except OSError:
         pass
-    return "4.1.0"
+    return "4.3.0"
 
 
 def parse_version_tuple(raw_version):
@@ -230,9 +230,11 @@ def main():
             raise ValueError("Lütfen saat girin.")
 
         try:
-            datetime.strptime(tarih, "%d.%m.%Y")
+            tarih_dt = datetime.strptime(tarih, "%d.%m.%Y").date()
         except ValueError as exc:
             raise ValueError("Tarih formatı gg.aa.yyyy olmalı.") from exc
+        if tarih_dt < date.today():
+            raise ValueError("Bugünden daha eski bir tarih seçilemez.")
 
         try:
             datetime.strptime(saat, "%H:%M")
@@ -262,6 +264,7 @@ def main():
         }
 
     root = tk.Tk()
+    ui_state = {"closing": False}
     root.title("TCDD Otomatik Bilet Arama Botu")
     root.configure(bg=APP_BG)
     root.resizable(False, False)
@@ -270,7 +273,37 @@ def main():
     except tk.TclError:
         pass
     center_geometry(root, *APP_SIZE)
-    root.bind("<Escape>", lambda _event: root.destroy())
+    _tk_after = root.after
+
+    def safe_after(*args):
+        if ui_state["closing"]:
+            return None
+        if len(args) == 1:
+            delay = 0
+            callback = args[0]
+        else:
+            delay = args[0]
+            callback = args[1]
+        try:
+            return _tk_after(delay, callback)
+        except RuntimeError:
+            return None
+        except tk.TclError:
+            return None
+
+    root.after = safe_after
+
+    def on_close():
+        global g_isStopped
+        ui_state["closing"] = True
+        g_isStopped = True
+        try:
+            root.destroy()
+        except tk.TclError:
+            pass
+
+    root.protocol("WM_DELETE_WINDOW", on_close)
+    root.bind("<Escape>", lambda _event: on_close())
 
     style = ttk.Style()
     style.theme_use("clam")
@@ -464,7 +497,13 @@ def main():
         row=1, column=2, columnspan=2, sticky="ew"
     )
     ttk.Label(route_grid, text="Tarih", style="Section.TLabel").grid(row=2, column=0, sticky="w", pady=(14, 4))
-    DateEntry(route_grid, textvariable=tarih_var, date_pattern="dd.MM.yyyy", width=16).grid(
+    DateEntry(
+        route_grid,
+        textvariable=tarih_var,
+        date_pattern="dd.MM.yyyy",
+        width=16,
+        mindate=date.today(),
+    ).grid(
         row=3, column=0, sticky="w"
     )
     ttk.Button(
@@ -589,10 +628,10 @@ def main():
             log_text.insert(tk.END, f"[{timestamp}] {message}\n")
             log_text.see(tk.END)
 
-        root.after(0, _append)
+        safe_after(_append)
 
     def set_run_status(message):
-        root.after(0, lambda: run_status_var.set(message))
+        safe_after(lambda: run_status_var.set(message))
 
     def set_running(is_running):
         def _set():
@@ -605,7 +644,7 @@ def main():
                 btn_stop.config(state=tk.DISABLED)
                 loader.stop()
 
-        root.after(0, _set)
+        safe_after(_set)
 
     def update_delay_label(*_args):
         value = int(delay_time_var.get())
@@ -658,8 +697,8 @@ def main():
                     status = f"En güncel sürüm sizde: v{current_version}"
                     detail = f"GitHub son sürümü: {release['tag_name']} | {published_text}"
 
-                root.after(0, lambda: update_status_var.set(status))
-                root.after(0, lambda: update_detail_var.set(detail))
+                safe_after(lambda: update_status_var.set(status))
+                safe_after(lambda: update_detail_var.set(detail))
                 if show_message:
                     root.after(
                         0,
@@ -758,8 +797,15 @@ def main():
                     if result == ErrCodes.GUZERGAH_HATASI:
                         set_run_status("Güzergah hatası")
                         break
+                    if result == ErrCodes.SAAT_HATASI:
+                        set_run_status("Sefer saati bulunamadi")
+                        append_log(
+                            "Girilen saatte uygun sefer bulunamadi. "
+                            "Arama durduruldu."
+                        )
+                        break
                 except InvalidSessionIdException as exc:
-                    append_log(f"Tarayıcı oturumu beklenmedik ekilde kapandı: {exc}")
+                    append_log(f"Tarayıcı oturumu beklenmedik sekilde kapandi: {exc}")
                     set_run_status("Tarayıcı oturumu kapandı")
                     safe_driver_quit(driver)
                     break

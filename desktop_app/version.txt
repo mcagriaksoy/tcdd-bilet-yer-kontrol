@@ -19,13 +19,13 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'github.com/mcagriaksoy'),
           StringStruct('FileDescription', 'TCDD Bilet Kontrol Etme (Yer Bulma) Uygulaması'),
-          StringStruct('FileVersion', '4.1.0'),
+          StringStruct('FileVersion', '4.3.0'),
           StringStruct('InternalName', 'SafePDF'),
           StringStruct('LegalCopyright', 'Copyright (C) 2026 mcagriaksoy'),
           StringStruct('LegalTrademarks', ''),
           StringStruct('OriginalFilename', 'TCDD.Bilet.Bulma.Botu_v4_1_0_win64.exe'),
           StringStruct('ProductName', 'SafePDF'),
-          StringStruct('ProductVersion', '4.1.0'),
+          StringStruct('ProductVersion', '4.3.0'),
           StringStruct('License', 'GPL-V3.0')
         ])
       ]),

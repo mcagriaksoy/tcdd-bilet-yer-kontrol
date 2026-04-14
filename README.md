@@ -115,8 +115,8 @@ Paket olusturma:
 
 ```powershell
 python -m build
-python -m twine check dist\tcdd_bilet_yer_kontrol-4.1.0.tar.gz
-python -m twine check dist\tcdd_bilet_yer_kontrol-4.1.0-py3-none-any.whl
+python -m twine check dist\tcdd_bilet_yer_kontrol-4.3.0.tar.gz
+python -m twine check dist\tcdd_bilet_yer_kontrol-4.3.0-py3-none-any.whl
 ```
 
 TestPyPI/PyPI yukleme:

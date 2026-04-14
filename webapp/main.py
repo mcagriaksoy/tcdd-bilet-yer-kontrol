@@ -19,11 +19,12 @@ def _force_utf8_stdio():
 def main():
     _force_utf8_stdio()
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    web_port = int(os.environ.get("TCDD_WEB_PORT", "5001"))
     app.run(
         debug=debug_mode,
         use_reloader=False,
         host="127.0.0.1",
-        port=5000,
+        port=web_port,
     )
 
 

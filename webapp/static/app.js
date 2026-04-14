@@ -72,8 +72,10 @@ function setTodayDefaults() {
   const hh = String(now.getHours()).padStart(2, "0");
   const min = String(now.getMinutes()).padStart(2, "0");
 
+  const todayIso = `${yyyy}-${mm}-${dd}`;
+  dateField.min = todayIso;
   if (!dateField.value) {
-    dateField.value = `${yyyy}-${mm}-${dd}`;
+    dateField.value = todayIso;
   }
   if (!timeField.value) {
     timeField.value = `${hh}:${min}`;
@@ -278,6 +280,12 @@ function formToPayload() {
 
 async function startJob(event) {
   event.preventDefault();
+  const dateField = form.elements.tarih;
+  const todayIso = new Date().toISOString().slice(0, 10);
+  if (dateField.value && dateField.value < todayIso) {
+    alert("Bugünden daha eski bir tarih seçilemez.");
+    return;
+  }
   const response = await fetch("/api/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

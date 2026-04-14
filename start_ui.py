@@ -6,8 +6,13 @@ import tkinter as tk
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from tkinter import ttk
+from time import sleep
+from tkinter import messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
+from urllib.error import URLError
+from urllib.request import urlopen
+
+from backend.driver_setting import ensure_driver_downloaded, has_local_driver, resolve_logs_dir
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 APP_HOME = (
@@ -15,15 +20,18 @@ APP_HOME = (
     if getattr(sys, "frozen", False)
     else PROJECT_ROOT
 )
-WEB_LOG_PATH = APP_HOME / "web_launcher.log"
-DESKTOP_LOG_PATH = APP_HOME / "desktop_launcher.log"
+LOGS_DIR = Path(resolve_logs_dir())
+WEB_LOG_PATH = LOGS_DIR / "web_launcher.log"
+DESKTOP_LOG_PATH = LOGS_DIR / "desktop_launcher.log"
+LAUNCHER_LOG_PATH = LOGS_DIR / "launcher_ui.log"
 
 
 class LauncherApp:
     def __init__(self):
+        self.web_port = int(os.environ.get("TCDD_WEB_PORT", "5001"))
         self.root = tk.Tk()
-        self.root.title("TCDD Bilet Yer Kontrol Başlatıcı")
-        self.root.geometry("720x550")
+        self.root.title("TCDD Bilet Yer Kontrol Botu Başlatıcı")
+        self.root.geometry("720x450")
         self.root.resizable(False, False)
         self.root.configure(bg="#f2f6fb")
         self._set_window_icon()
@@ -32,14 +40,18 @@ class LauncherApp:
         self.desktop_process = None
         self.web_log = None
         self.desktop_log = None
+        self.driver_download_in_progress = False
 
         self.web_status = tk.StringVar(value="Web Uygulaması: Kapalı")
         self.desktop_status = tk.StringVar(value="Masaüstü Uygulaması: Kapalı")
+        self.driver_status = tk.StringVar(value="")
 
         self._setup_style()
         self._build_ui()
+        self._refresh_driver_button_state()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.after(1000, self.poll_processes)
+        self.root.after(200, self._auto_download_driver_if_needed)
 
     def _setup_style(self):
         style = ttk.Style()
@@ -148,11 +160,29 @@ class LauncherApp:
         state = tk.NORMAL if self._is_running(self.web_process) else tk.DISABLED
         self.btn_open_web.config(state=state)
 
+    def _refresh_driver_button_state(self):
+        if not hasattr(self, "btn_download_driver"):
+            return
+        if self.driver_download_in_progress:
+            self.btn_download_driver.config(state=tk.DISABLED)
+            self.driver_status.set("WebDriver indiriliyor...")
+            return
+        if has_local_driver():
+            self.btn_download_driver.config(state=tk.DISABLED)
+            self.driver_status.set(
+                "WebDriver hazır. WebDriver, tarayıcıyı otomatik kontrol eden yardımcı bileşendir."
+            )
+        else:
+            self.btn_download_driver.config(state=tk.NORMAL)
+            self.driver_status.set(
+                "WebDriver bulunamadı. WebDriver, tarayıcıyı otomatik kontrol eden yardımcı bileşendir."
+            )
+
     def _build_ui(self):
         main = ttk.Frame(self.root, padding=16, style="Shell.TFrame")
         main.pack(fill=tk.BOTH, expand=True)
 
-        title = ttk.Label(main, text="TCDD Otomatik Bilet Yer Kontrol Başlatıcısı", style="Title.TLabel")
+        title = ttk.Label(main, text="TCDD Otomatik Bilet Yer Kontrol Botu Başlatıcısı", style="Title.TLabel")
         title.pack(anchor="w")
 
         subtitle = ttk.Label(
@@ -221,6 +251,31 @@ class LauncherApp:
         self.btn_open_web.pack(side=tk.LEFT)
         self._update_open_web_button_state()
 
+        row3 = ttk.Frame(controls)
+        row3.pack(fill=tk.X, pady=(8, 0))
+        self.btn_download_driver = ttk.Button(
+            row3,
+            text="WebDriver İndir",
+            style="Ghost.TButton",
+            command=self.download_driver,
+        )
+        self.btn_download_driver.pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Label(
+            row3,
+            textvariable=self.driver_status,
+            style="Subtitle.TLabel",
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        row4 = ttk.Frame(main, style="Shell.TFrame")
+        row4.pack(fill=tk.X, pady=(0, 8))
+        self.btn_toggle_logs = ttk.Button(
+            row4,
+            text="Logları Göster",
+            style="Ghost.TButton",
+            command=self._toggle_logs,
+        )
+        self.btn_toggle_logs.pack(anchor="w")
+
         log_box = ttk.LabelFrame(main, text="Başlatıcı Logları", padding=12, style="Card.TLabelframe")
         log_box.pack(fill=tk.BOTH, expand=True)
         self.log_text = ScrolledText(
@@ -234,16 +289,48 @@ class LauncherApp:
             state=tk.NORMAL,
         )
         self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_box = log_box
+        self.logs_visible = False
+        self.log_box.pack_forget()
         self._log("Başlatıcı hazır.")
 
     def _log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.log_text.insert(tk.END, f"[{timestamp}] {message}\n")
         self.log_text.see(tk.END)
+        try:
+            LAUNCHER_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(LAUNCHER_LOG_PATH, "a", encoding="utf-8") as log_file:
+                log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
+        except OSError:
+            pass
+
+    def _toggle_logs(self):
+        self.logs_visible = not self.logs_visible
+        if self.logs_visible:
+            self.root.geometry("720x570")
+            self.log_box.pack(fill=tk.BOTH, expand=True)
+            self.btn_toggle_logs.config(text="Logları Gizle")
+        else:
+            self.log_box.pack_forget()
+            self.root.geometry("720x450")
+            self.btn_toggle_logs.config(text="Logları Göster")
 
     @staticmethod
     def _is_running(process):
         return process is not None and process.poll() is None
+
+    @staticmethod
+    def _windows_subprocess_kwargs():
+        if os.name != "nt":
+            return {}
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+        return {
+            "startupinfo": startupinfo,
+            "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
+        }
 
     def _cleanup_stale_web_processes(self):
         if os.name != "nt":
@@ -261,6 +348,7 @@ class LauncherApp:
                 capture_output=True,
                 text=True,
                 check=False,
+                **self._windows_subprocess_kwargs(),
             )
             killed = [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
             if killed:
@@ -297,7 +385,7 @@ class LauncherApp:
             },
         }
         if os.name == "nt":
-            kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+            kwargs.update(self._windows_subprocess_kwargs())
 
         try:
             process = subprocess.Popen(command, **kwargs)
@@ -366,6 +454,74 @@ class LauncherApp:
             log_file.close()
         setattr(self, log_attr, None)
 
+    def _wait_for_web_ready(self, timeout_seconds=15):
+        deadline = datetime.now().timestamp() + timeout_seconds
+        status_url = f"http://127.0.0.1:{self.web_port}/api/status"
+        while datetime.now().timestamp() < deadline:
+            if not self._is_running(self.web_process):
+                return False
+            try:
+                with urlopen(status_url, timeout=1):
+                    return True
+            except URLError:
+                sleep(0.3)
+            except Exception:
+                sleep(0.3)
+        return False
+
+    def _set_driver_download_state(self, in_progress):
+        self.driver_download_in_progress = in_progress
+        self._refresh_driver_button_state()
+
+    def _finish_driver_download(self, driver_path, automatic):
+        self._set_driver_download_state(False)
+        if driver_path:
+            self._log(f"WebDriver hazır: {driver_path}")
+            if not automatic:
+                messagebox.showinfo(
+                    "WebDriver Hazır",
+                    "WebDriver indirildi. Artık web ve masaüstü uygulamasını başlatabilirsiniz.",
+                )
+        else:
+            self._log("WebDriver indirilemedi.")
+            if not automatic:
+                messagebox.showwarning(
+                    "WebDriver İndirilemedi",
+                    "WebDriver indirilemedi. İnternet bağlantınızı ve Edge sürümünü kontrol edin.",
+                )
+        self._refresh_driver_button_state()
+
+    def _download_driver_worker(self, automatic):
+        try:
+            driver_path = ensure_driver_downloaded()
+        except Exception as exc:
+            self.root.after(0, lambda: self._log(f"WebDriver indirme hatasi: {exc}"))
+            driver_path = None
+        self.root.after(0, lambda: self._finish_driver_download(driver_path, automatic))
+
+    def download_driver(self, automatic=False):
+        if self.driver_download_in_progress or has_local_driver():
+            self._refresh_driver_button_state()
+            return
+        self._set_driver_download_state(True)
+        self._log(
+            "WebDriver indiriliyor. Bu bileşen, uygulamanın Edge tarayıcısını otomatik kontrol etmesini sağlar."
+        )
+        import threading
+
+        threading.Thread(
+            target=self._download_driver_worker,
+            args=(automatic,),
+            daemon=True,
+        ).start()
+
+    def _auto_download_driver_if_needed(self):
+        if has_local_driver():
+            self._refresh_driver_button_state()
+            return
+        self._log("İlk açılışta WebDriver bulunamadı, otomatik indirme başlatılıyor.")
+        self.download_driver(automatic=True)
+
     def start_web(self):
         was_running = self._is_running(self.web_process)
         if not was_running:
@@ -387,7 +543,13 @@ class LauncherApp:
             self._update_open_web_button_state()
             return
         if not was_running and self._is_running(self.web_process):
-            self.open_web()
+            if self._wait_for_web_ready():
+                self.open_web()
+            else:
+                self._log(
+                    "Web uygulaması zamanında hazır olmadı. "
+                    f"Elle aç: http://127.0.0.1:{self.web_port}"
+                )
 
     def start_desktop(self):
         if getattr(sys, "frozen", False):
@@ -425,8 +587,37 @@ class LauncherApp:
         if not self._is_running(self.web_process):
             self._log("Web uygulaması çalışmadığı için sayfa açılamadı.")
             return
-        webbrowser.open("http://127.0.0.1:5000")
-        self._log("Web uygulaması tarayıcıda açıldı.")
+        url = f"http://127.0.0.1:{self.web_port}"
+        opened = False
+
+        try:
+            opened = bool(webbrowser.open(url, new=2))
+        except Exception:
+            opened = False
+
+        if not opened and os.name == "nt":
+            try:
+                subprocess.run(
+                    ["cmd", "/c", "start", "", url],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                opened = True
+            except Exception:
+                opened = False
+
+        if not opened and os.name == "nt":
+            try:
+                os.startfile(url)  # type: ignore[attr-defined]
+                opened = True
+            except Exception:
+                opened = False
+
+        if opened:
+            self._log("Web uygulaması tarayıcıda açıldı.")
+        else:
+            self._log(f"Tarayıcı otomatik açılamadı. Elle aç: {url}")
 
     def poll_processes(self):
         if self.web_process and self.web_process.poll() is not None:

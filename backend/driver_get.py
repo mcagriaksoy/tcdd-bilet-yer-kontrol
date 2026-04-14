@@ -17,6 +17,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from .driver_setting import resolve_logs_dir
+
 TCDD_POPUP_CLOSE_BUTTON_XPATH = "/html/body/div[2]/div[1]/div/div/header/div/button"
 
 
@@ -32,7 +34,7 @@ class DriverGet:
             self.logger = logger
         elif not logging.getLogger().handlers:
             logging.basicConfig(
-                filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
+                filename=os.path.join(resolve_logs_dir(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                 encoding="utf-8",

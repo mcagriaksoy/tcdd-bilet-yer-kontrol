@@ -30,8 +30,8 @@ class Rota:
         self.first_location = nereden
         self.last_location = nereye
         self.date = date
-        self.short_wait = WebDriverWait(self.driver, 1.5)
-        self.medium_wait = WebDriverWait(self.driver, 8)
+        self.short_wait = WebDriverWait(self.driver, 1.0)
+        self.medium_wait = WebDriverWait(self.driver, 5)
 
     def _safe_click(self, element):
         try:
@@ -120,7 +120,7 @@ class Rota:
     def dataInput(self):
         """Rota bilgilerini alır ve gerekli yerlere yazar."""
         try:
-            element = WebDriverWait(self.driver, 22).until(
+            element = WebDriverWait(self.driver, 12).until(
                 EC.visibility_of_element_located((By.XPATH, NEREDEN_BOX))
             )
             ActionChains(self.driver).move_to_element(element).perform()
@@ -132,9 +132,9 @@ class Rota:
             )
             self._safe_click(dynamic_element)
 
-            sleep(1)
+            sleep(0.25)
 
-            element2 = WebDriverWait(self.driver, 22).until(
+            element2 = WebDriverWait(self.driver, 12).until(
                 EC.visibility_of_element_located((By.XPATH, NEREYE_BOX))
             )
             ActionChains(self.driver).move_to_element(element2).perform()
@@ -146,14 +146,14 @@ class Rota:
             )
             self._safe_click(dynamic_element)
 
-            sleep(0.5)
+            sleep(0.2)
             if not self._is_today_selected():
                 self._click_date_box()
-                sleep(0.3)
+                sleep(0.15)
                 self._select_date()
 
-            sleep(1)
-            element4 = WebDriverWait(self.driver, 22).until(
+            sleep(0.2)
+            element4 = WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_element_located((By.XPATH, BUTTON_BOX))
             )
             self._safe_click(element4)

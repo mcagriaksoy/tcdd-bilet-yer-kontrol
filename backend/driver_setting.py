@@ -9,6 +9,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import zipfile
 from io import BytesIO
@@ -19,6 +20,38 @@ from selenium.webdriver import Edge
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
+
+def resolve_app_home():
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def resolve_logs_dir():
+    logs_dir = os.path.join(resolve_app_home(), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    return logs_dir
+
+
+def resolve_local_driver_path():
+    return os.path.join(resolve_app_home(), "msedgedriver.exe")
+
+
+def has_local_driver():
+    return os.path.exists(resolve_local_driver_path())
+
+
+def get_windows_subprocess_kwargs():
+    if platform.system() != "Windows":
+        return {}
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = 0
+    return {
+        "startupinfo": startupinfo,
+        "creationflags": subprocess.CREATE_NO_WINDOW,
+    }
 
 
 def cleanup_temp_user_data_dir(temp_dir, logger=None):
@@ -46,6 +79,7 @@ def cleanup_msedgedriver_processes(logger=None):
             capture_output=True,
             text=True,
             check=False,
+            **get_windows_subprocess_kwargs(),
         )
         if result.returncode == 0:
             if logger:
@@ -65,6 +99,9 @@ def cleanup_msedgedriver_processes(logger=None):
 
 def cleanup_webdriver_runtime(driver, logger=None):
     if driver:
+        if getattr(driver, "_tcdd_cleanup_done", False):
+            return
+        setattr(driver, "_tcdd_cleanup_done", True)
         try:
             driver.quit()
         except Exception as exc:
@@ -83,11 +120,13 @@ class DriverSetting:
     def __init__(self, logger=None):
         self.driver = None
         self.temp_user_data_dir = None
+        self.app_home = resolve_app_home()
+        self.logs_dir = resolve_logs_dir()
         if logger is not None:
             self.logger = logger
         elif not logging.getLogger().handlers:
             logging.basicConfig(
-                filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
+                filename=os.path.join(self.logs_dir, "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                 encoding="utf-8",
@@ -153,7 +192,11 @@ class DriverSetting:
                 "-Command",
                 f"(Get-Item '{edge_binary}').VersionInfo.ProductVersion",
             ]
-            version = subprocess.check_output(command, text=True).strip()
+            version = subprocess.check_output(
+                command,
+                text=True,
+                **get_windows_subprocess_kwargs(),
+            ).strip()
             return version or None
         except Exception as exc:
             self.logger.debug(f"Edge sürümü okunamadı: {exc}")
@@ -170,7 +213,11 @@ class DriverSetting:
             return None
         try:
             command = [driver_path, "--version"]
-            output = subprocess.check_output(command, text=True).strip()
+            output = subprocess.check_output(
+                command,
+                text=True,
+                **get_windows_subprocess_kwargs(),
+            ).strip()
             match = re.search(r"(\d+\.\d+\.\d+\.\d+)", output)
             if match:
                 return match.group(1)
@@ -197,7 +244,7 @@ class DriverSetting:
             os.environ.get("EDGE_DRIVER_PATH"),
             os.environ.get("EDGEWEBDRIVER"),
             shutil.which("msedgedriver"),
-            os.path.join(os.getcwd(), "msedgedriver.exe"),
+            resolve_local_driver_path(),
         ]
         for path in candidates:
             if path and os.path.exists(path):
@@ -229,7 +276,13 @@ class DriverSetting:
             self.logger.warning(f"WebDriver pencere boyutu uygulanamadi: {exc}")
 
     def _start_with_service(self, options, driver_path):
-        service = EdgeService(driver_path)
+        service = EdgeService(
+            driver_path,
+            log_output=subprocess.DEVNULL,
+            popen_kw={"creation_flags": subprocess.CREATE_NO_WINDOW}
+            if platform.system() == "Windows"
+            else {},
+        )
         self.driver = Edge(service=service, options=options)
         self._enforce_window_geometry(self.driver)
         self._attach_runtime_metadata(self.driver)
@@ -271,7 +324,7 @@ class DriverSetting:
             version_candidates.append(".".join(parts[:3]))
 
         asset_name = self._driver_asset_name()
-        destination_path = os.path.join(os.getcwd(), "msedgedriver.exe")
+        destination_path = resolve_local_driver_path()
 
         for version in version_candidates:
             urls = [
@@ -300,7 +353,7 @@ class DriverSetting:
             return local_driver
 
         if local_driver and os.path.abspath(local_driver) == os.path.join(
-            os.getcwd(), "msedgedriver.exe"
+            resolve_local_driver_path()
         ):
             try:
                 os.remove(local_driver)
@@ -385,3 +438,18 @@ class DriverSetting:
                 self.driver = None
 
         self._cleanup_temp_dir()
+
+    def download_driver(self):
+        local_driver = self._find_local_driver()
+        edge_version = self._get_edge_version()
+        if local_driver and self._is_driver_compatible(local_driver, edge_version):
+            self.logger.info(f"Uyumlu driver zaten mevcut: {local_driver}")
+            return local_driver
+        downloaded_driver = self._auto_download_driver()
+        if downloaded_driver:
+            self.logger.info(f"Driver indirme tamamlandi: {downloaded_driver}")
+        return downloaded_driver
+
+
+def ensure_driver_downloaded(logger=None):
+    return DriverSetting(logger=logger).download_driver()

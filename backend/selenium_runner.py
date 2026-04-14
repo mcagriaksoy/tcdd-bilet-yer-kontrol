@@ -4,7 +4,7 @@ import logging
 import os
 import inspect
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from time import sleep
 
 from selenium.common.exceptions import InvalidSessionIdException, NoSuchWindowException, TimeoutException
@@ -16,6 +16,7 @@ from .error_codes import BASARILI, GUZERGAH_HATASI, SAAT_HATASI, TEKRAR_DENE
 from .route import Rota
 from .stations import STATIONS
 from .telegram_msg import TelegramMsg
+from .driver_setting import resolve_logs_dir
 
 
 class PayloadValidationError(ValueError):
@@ -28,7 +29,7 @@ def _build_logger():
         return logger
     logger.setLevel(logging.INFO)
     handler = logging.FileHandler(
-        os.path.join(os.getcwd(), "tcdd_web_debug.log"),
+        os.path.join(resolve_logs_dir(), "tcdd_web_debug.log"),
         encoding="utf-8",
     )
     handler.setFormatter(
@@ -77,8 +78,10 @@ def validate_payload(payload):
     if not (allow_economy or allow_business):
         raise PayloadValidationError("En az bir bilet tipi secilmeli.")
 
-    datetime.strptime(tarih, "%d.%m.%Y")
+    date_value = datetime.strptime(tarih, "%d.%m.%Y").date()
     datetime.strptime(saat, "%H:%M")
+    if date_value < date.today():
+        raise PayloadValidationError("Bugunden daha eski bir tarih secilemez.")
 
     if telegram_msg:
         if not bot_token or not chat_id:

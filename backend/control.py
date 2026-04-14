@@ -5,7 +5,8 @@ Enhanced version @author: Mehmet Ã‡aÄŸrÄ± Aksoy https://github.com/mcagri
 """
 
 import sys
-from time import sleep
+import re
+from time import sleep, monotonic
 import logging
 import ctypes
 import os
@@ -23,6 +24,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from . import error_codes as ErrCodes
+from .driver_setting import resolve_logs_dir
 
 MAX_TREN_SAYISI = 22
 
@@ -50,7 +52,7 @@ class Control:
             self.logger = logger
         elif not logging.getLogger().handlers:
             logging.basicConfig(
-                filename=os.path.join(os.getcwd(), "tcdd_debug.log"),
+                filename=os.path.join(resolve_logs_dir(), "tcdd_debug.log"),
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                 encoding="utf-8",
@@ -86,11 +88,48 @@ class Control:
         except Exception:
             self.logger.debug("Popup failed")
 
+    def _available_train_rows(self):
+        rows = []
+        elements = self.driver.find_elements(
+            By.XPATH, "//*[starts-with(@id, 'gidis') and contains(@id, 'btn')]"
+        )
+        for element in elements:
+            element_id = (element.get_attribute("id") or "").strip()
+            match = re.fullmatch(r"gidis(\d+)btn", element_id)
+            if match:
+                rows.append(int(match.group(1)))
+        return sorted(set(rows))
+
+    def _wait_for_available_train_rows(self, timeout=20):
+        deadline = monotonic() + timeout
+        last_rows = []
+        stable_hits = 0
+
+        while monotonic() < deadline:
+            rows = self._available_train_rows()
+            if rows:
+                if rows == last_rows:
+                    stable_hits += 1
+                else:
+                    stable_hits = 1
+                    last_rows = rows
+                if stable_hits >= 2:
+                    return rows
+            else:
+                stable_hits = 0
+                last_rows = []
+            sleep(0.4)
+
+        return last_rows
+
     def kill_driver(self):
         """Driver'Ä± kapatÄ±r."""
         try:
             # Protect against calling methods on a closed/invalid session
             if self.driver:
+                if getattr(self.driver, "_tcdd_cleanup_done", False):
+                    self.driver = None
+                    return
                 session_id = getattr(self.driver, "session_id", None)
                 if session_id:
                     try:
@@ -107,6 +146,11 @@ class Control:
                         self.logger.debug("quit failed or session invalid")
                 else:
                     self.logger.debug("Driver session_id is None or invalid; skipping close/quit.")
+                try:
+                    setattr(self.driver, "_tcdd_cleanup_done", True)
+                except Exception:
+                    pass
+                self.driver = None
             self.logger.info("Driver kapatma iÅŸlemi tamamlandÄ± (guarded).")
         except Exception as e:
             self.logger.exception(f"Kill driver sÄ±rasÄ±nda hata: {e}")
@@ -114,20 +158,20 @@ class Control:
     def sayfa_kontrol(self):
         """Sayfada yer var mÄ± yok mu kontrol eder."""
         try:
-            element = WebDriverWait(self.driver, 5).until(
+            WebDriverWait(self.driver, 8).until(
                 EC.visibility_of_element_located(
-                    (By.XPATH, '//*[@id="seferListScroll"]/div[2]/div/div[1]')
+                    (By.XPATH, '//*[@id="seferListScroll"]')
                 )
             )
-            if element:
+            rows = self._wait_for_available_train_rows(timeout=20)
+            self.logger.info("Mevcut sefer satirlari: %s", rows)
+            if rows:
                 sys.stdout.write("\nAranan saat: " + self.zaman + "\n")
-                for row in range(0, MAX_TREN_SAYISI):
-                    sleep(0.02)
+                for row in rows:
                     xpath = f'//*[@id="gidis{row}btn"]/div/div[2]/div/div[2]/div[2]/span[1]/time'
                     try:
-                        aranan_element = WebDriverWait(self.driver, 10).until(
-                            EC.visibility_of_element_located((By.XPATH, xpath))
-                        )
+                        candidates = self.driver.find_elements(By.XPATH, xpath)
+                        aranan_element = candidates[0] if candidates else None
                         if aranan_element is None:
                             sys.stdout.write(
                                 f"\nRow {row}: Saat elementi bos geldi, atlaniyor..."
@@ -153,7 +197,7 @@ class Control:
                     if self.zaman == aranan:
                         sys.stdout.write("\nAranan saat bulundu...")
                         try:
-                            element = WebDriverWait(self.driver, 10).until(
+                            element = WebDriverWait(self.driver, 4).until(
                                 EC.element_to_be_clickable((By.XPATH, xpath))
                             )
                             element.click()
@@ -167,7 +211,7 @@ class Control:
                         for index in range(1, 5):
                             try:
                                 text = (
-                                    WebDriverWait(self.driver, 10)
+                                    WebDriverWait(self.driver, 4)
                                     .until(
                                         EC.visibility_of_element_located(
                                             (
@@ -224,7 +268,7 @@ class Control:
                         try:
                             if economy_row:
                                 economy_seat = (
-                                    WebDriverWait(self.driver, 10)
+                                    WebDriverWait(self.driver, 4)
                                     .until(
                                         EC.visibility_of_element_located(
                                             (
@@ -237,7 +281,7 @@ class Control:
                                 )
                             if business_row:
                                 business_seat = (
-                                    WebDriverWait(self.driver, 10)
+                                    WebDriverWait(self.driver, 4)
                                     .until(
                                         EC.visibility_of_element_located(
                                             (
@@ -321,7 +365,12 @@ class Control:
                 )
                 return ErrCodes.SAAT_HATASI
             else:
-                sys.stdout.write("\nAradÄ±ÄŸÄ±nÄ±z seferde boÅŸ yer yoktur...")
+                sys.stdout.write(
+                    "\nSefer listesi zamaninda yuklenemedi, tekrar denenecek."
+                )
+                self.logger.warning(
+                    "Sefer listesi yuklenemedi veya satirlar hazir olmadan kontrol tamamlandi."
+                )
                 self.kill_driver()
                 return ErrCodes.TEKRAR_DENE
         except InvalidSessionIdException as ise:

@@ -26,6 +26,14 @@ const delayInput = document.getElementById("delay-input");
 
 let lastLogId = 0;
 let previouslyFound = false;
+let swRegistration = null;
+let audioContextRef = null;
+let audioUnlocked = false;
+let notificationCooldownUntil = 0;
+
+const FOUND_NOTIFICATION_TAG = "tcdd-bilet-bulundu";
+const FOUND_NOTIFICATION_TITLE = "TCDD Bilet Alarmi";
+const FOUND_NOTIFICATION_BODY = "Uygun bilet bulundu. Satin alma icin TCDD eBilet'i kontrol et.";
 
 function setTextIfPresent(element, value) {
   if (element) {
@@ -108,7 +116,7 @@ function updateWebNotificationState() {
   }
 
   if (Notification.permission === "granted") {
-    webNotificationStatus.textContent = "Tarayici bildirimi: Acık";
+    webNotificationStatus.textContent = "Tarayici bildirimi: Acik ve arka planda gosterilebilir";
     webNotificationEnabled.checked = true;
     webNotificationEnabled.disabled = true;
   } else if (Notification.permission === "denied") {
@@ -136,6 +144,9 @@ async function requestWebNotificationPermission() {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
     webNotificationEnabled.checked = false;
+  }
+  if (permission === "granted") {
+    await ensureServiceWorker();
   }
   updateWebNotificationState();
 }
@@ -176,7 +187,23 @@ function applyStatusTone(data) {
   statusPill.textContent = data.status || "Hazir";
 }
 
-function showFoundNotification() {
+async function ensureServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return null;
+  }
+  if (swRegistration) {
+    return swRegistration;
+  }
+  try {
+    swRegistration = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    return swRegistration;
+  } catch (_error) {
+    return null;
+  }
+}
+
+async function showFoundNotification() {
   if (!("Notification" in window)) {
     return;
   }
@@ -186,33 +213,98 @@ function showFoundNotification() {
   if (Notification.permission !== "granted") {
     return;
   }
-  new Notification("TCDD Bilet Alarmi", {
-    body: "Uygun bilet bulundu. Satin alma icin TCDD eBilet'i kontrol et.",
+  const options = {
+    body: FOUND_NOTIFICATION_BODY,
     icon: "/favicon.ico",
-  });
+    badge: "/favicon.ico",
+    tag: FOUND_NOTIFICATION_TAG,
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [300, 150, 300, 150, 700],
+  };
+
+  const registration = await ensureServiceWorker();
+  if (registration && "showNotification" in registration) {
+    await registration.showNotification(FOUND_NOTIFICATION_TITLE, options);
+    return;
+  }
+
+  const notification = new Notification(FOUND_NOTIFICATION_TITLE, options);
+  notification.onclick = () => {
+    window.focus();
+    notification.close();
+  };
 }
 
-function playFoundSound() {
+function getAudioContext() {
+  if (!audioContextRef) {
+    audioContextRef = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioContextRef;
+}
+
+async function unlockAudio() {
   if (!soundEnabled.checked) {
     return;
   }
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const playBeep = (startAt) => {
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 920;
-      gain.gain.setValueAtTime(0.0001, audioContext.currentTime + startAt);
-      gain.gain.exponentialRampToValueAtTime(0.2, audioContext.currentTime + startAt + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + startAt + 0.22);
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-      osc.start(audioContext.currentTime + startAt);
-      osc.stop(audioContext.currentTime + startAt + 0.24);
-    };
-    playBeep(0);
-    playBeep(0.28);
+    const audioContext = getAudioContext();
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+    audioUnlocked = audioContext.state === "running";
+  } catch (_error) {
+    audioUnlocked = false;
+  }
+}
+
+function scheduleTone(audioContext, frequency, startAt, duration, volume) {
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(frequency, audioContext.currentTime + startAt);
+  gain.gain.setValueAtTime(0.0001, audioContext.currentTime + startAt);
+  gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + startAt + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + startAt + duration);
+
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start(audioContext.currentTime + startAt);
+  osc.stop(audioContext.currentTime + startAt + duration + 0.04);
+}
+
+async function playFoundSound() {
+  if (!soundEnabled.checked) {
+    return;
+  }
+  try {
+    await unlockAudio();
+    if (!audioUnlocked) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now < notificationCooldownUntil) {
+      return;
+    }
+    notificationCooldownUntil = now + 12000;
+
+    const audioContext = getAudioContext();
+    const pattern = [
+      { startAt: 0.0, duration: 0.42, frequency: 880, volume: 0.22 },
+      { startAt: 0.6, duration: 0.42, frequency: 988, volume: 0.22 },
+      { startAt: 1.2, duration: 0.42, frequency: 880, volume: 0.24 },
+      { startAt: 1.8, duration: 0.55, frequency: 1046, volume: 0.25 },
+      { startAt: 2.7, duration: 0.42, frequency: 880, volume: 0.22 },
+      { startAt: 3.3, duration: 0.42, frequency: 988, volume: 0.22 },
+      { startAt: 3.9, duration: 0.42, frequency: 880, volume: 0.24 },
+      { startAt: 4.5, duration: 0.75, frequency: 1174, volume: 0.26 },
+    ];
+
+    pattern.forEach(({ startAt, duration, frequency, volume }) => {
+      scheduleTone(audioContext, frequency, startAt, duration, volume);
+    });
   } catch (_error) {
     // Ignore audio errors on unsupported browsers.
   }
@@ -241,8 +333,8 @@ async function refreshStatus() {
 
   if (data.found && !previouslyFound) {
     openModal(ticketFoundModal);
-    showFoundNotification();
-    playFoundSound();
+    await showFoundNotification();
+    await playFoundSound();
   }
   previouslyFound = Boolean(data.found);
 }
@@ -311,14 +403,25 @@ setTodayDefaults();
 updateTelegramState();
 updateWebNotificationState();
 syncDelayControls(false);
+ensureServiceWorker();
 
 telegramEnabled.addEventListener("change", updateTelegramState);
 delaySlider.addEventListener("input", () => syncDelayControls(true));
 delayInput.addEventListener("input", () => syncDelayControls(false));
 webNotificationEnabled.addEventListener("change", requestWebNotificationPermission);
-soundEnabled.addEventListener("change", updateNotificationIndicator);
+soundEnabled.addEventListener("change", async () => {
+  updateNotificationIndicator();
+  await unlockAudio();
+});
 form.addEventListener("submit", startJob);
 stopButton.addEventListener("click", stopJob);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    notificationCooldownUntil = 0;
+  }
+});
+document.addEventListener("pointerdown", unlockAudio, { passive: true });
+document.addEventListener("keydown", unlockAudio);
 
 if (howItWorksTrigger && howItWorksModal) {
   howItWorksTrigger.addEventListener("click", () => openModal(howItWorksModal));

@@ -57,6 +57,12 @@ def favicon():
     return send_file(ico_path, mimetype="image/x-icon")
 
 
+@bp.get("/sw.js")
+def service_worker():
+    sw_path = Path(current_app.static_folder) / "sw.js"
+    return send_file(sw_path, mimetype="application/javascript")
+
+
 @bp.get("/<slug>")
 def legal_page(slug):
     data = LEGAL_PAGES.get(slug)

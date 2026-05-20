@@ -334,10 +334,10 @@ class Control:
                         economy_match = self.allow_economy and economy_seat > 0
                         business_match = self.allow_business and business_seat > 0
 
-                        if economy_match and economy_seat > 2:
+                        if economy_match and economy_seat > 0:
                             sys.stdout.write("\nEkonomi sinifinda yeteri kadar bos yer mevcut!")
                             return ErrCodes.BASARILI
-                        if business_match and business_seat > 2:
+                        if business_match and business_seat > 0:
                             sys.stdout.write("\nBusiness sinifinda yeteri kadar bos yer mevcut!")
                             return ErrCodes.BASARILI
                         if economy_match and economy_seat in [1, 2]:

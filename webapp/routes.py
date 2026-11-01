@@ -24,6 +24,7 @@ LEGAL_PAGES = {
             "Çalışma saatleri: Hafta içi 09:00 - 18:00",
             "Teknik destek taleplerinde kullandığınız rota ve saat bilgisini belirtmeniz süreci hızlandırır.",
         ],
+        "contact_form": True,
     },
     "gizlilik": {
         "title": "Gizlilik Politikası",

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from threading import Event, Lock, Thread
 
-from backend.error_codes import BASARILI, GUZERGAH_HATASI, SAAT_HATASI
+from backend.error_codes import BASARILI, CAPTCHA_HATASI, GUZERGAH_HATASI, SAAT_HATASI
 from backend.selenium_runner import PayloadValidationError, run_check_loop
 
 
@@ -18,6 +18,7 @@ class JobState:
     finished_at: str | None = None
     active_payload: dict = field(default_factory=dict)
     last_result_code: int | None = None
+    captcha: bool = False
 
 
 class JobManager:
@@ -57,6 +58,7 @@ class JobManager:
                 "finished_at": self._state.finished_at,
                 "active_payload": self._state.active_payload,
                 "last_result_code": self._state.last_result_code,
+                "captcha": self._state.captcha,
             }
 
     def _set_status(self, **kwargs):
@@ -105,6 +107,8 @@ class JobManager:
                 final_status = "Guzergah hatasi"
             if result == SAAT_HATASI:
                 final_status = "Sefer saati bulunamadi"
+            if result == CAPTCHA_HATASI:
+                final_status = "Guvenlik dogrulamasi gerekli"
             if self._stop_event.is_set():
                 final_status = "Kullanici tarafindan durduruldu"
             self._set_status(

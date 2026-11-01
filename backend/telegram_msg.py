@@ -32,12 +32,13 @@ class TelegramMsg:
         except (HTTPError, URLError, TimeoutError, ValueError):
             return False
 
-    def send_telegram_message(self, bot_token, chat_id):
-        """Telegram uzerinden bilet bulundu mesaji gonderir."""
-        message = quote_plus("Hey biletin bulundu! Acele et!")
+    def send_telegram_message(self, bot_token, chat_id, message=None):
+        """Telegram uzerinden bildirim mesaji gonderir."""
+        text = message or "Hey biletin bulundu! Acele et!"
+        encoded = quote_plus(text)
         endpoint = (
             f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            f"?chat_id={chat_id}&text={message}"
+            f"?chat_id={chat_id}&text={encoded}"
         )
         try:
             payload = self._request_json(endpoint)

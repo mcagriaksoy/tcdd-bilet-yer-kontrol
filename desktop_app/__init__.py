@@ -1,2 +1,0 @@
-"""Desktop application package."""
-

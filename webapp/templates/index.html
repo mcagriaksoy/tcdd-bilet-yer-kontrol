@@ -34,27 +34,71 @@
           </div>
 
           <div class="field-grid">
-            <label class="field">
+            <div class="field">
               <span>Kalkış istasyonu</span>
-              <input list="stations" name="nereden" value="Eskişehir" required>
-            </label>
+              <div class="station-picker" data-station-picker>
+                <input
+                  type="text"
+                  name="nereden"
+                  value="Eskişehir"
+                  placeholder="İstasyon ara..."
+                  autocomplete="off"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-autocomplete="list"
+                  required
+                >
+                <div class="station-options" role="listbox" hidden></div>
+              </div>
+            </div>
 
-            <label class="field">
+            <div class="field">
               <span>Varış istasyonu</span>
-              <input list="stations" name="nereye" value="Ankara Gar" required>
-            </label>
+              <div class="station-picker" data-station-picker>
+                <input
+                  type="text"
+                  name="nereye"
+                  value="Ankara Gar"
+                  placeholder="İstasyon ara..."
+                  autocomplete="off"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-autocomplete="list"
+                  required
+                >
+                <div class="station-options" role="listbox" hidden></div>
+              </div>
+            </div>
           </div>
 
           <div class="field-grid field-grid-tight">
-            <label class="field">
+            <div class="field">
               <span>Tarih</span>
-              <input type="date" name="tarih" required>
-            </label>
+              <input
+                type="text"
+                name="tarih"
+                placeholder="GG/AA/YYYY"
+                inputmode="numeric"
+                maxlength="10"
+                autocomplete="off"
+                required
+              >
+              <small class="field-hint">Örnek: 01/11/2026</small>
+            </div>
 
-            <label class="field">
+            <div class="field">
               <span>Saat</span>
-              <input type="time" name="saat" required>
-            </label>
+              <input
+                type="text"
+                name="saat"
+                placeholder="SS:DD"
+                inputmode="numeric"
+                maxlength="5"
+                autocomplete="off"
+                required
+              >
+              <small class="field-hint">24 saat · Örnek: 14:30</small>
+            </div>
           </div>
 
           <label class="field">
@@ -134,7 +178,7 @@
           </div>
           <div class="system-indicator">
             <span class="system-led"></span>
-            <span>Sistem durumu aktif</span>
+            <span>Sistem durumu aktif · Deneme <strong id="attempt-count">0</strong></span>
           </div>
           <div id="running-loader" class="running-loader is-hidden">
             <span class="spinner"></span>
@@ -182,9 +226,9 @@
       <div class="site-footer-inner">
         <p>TCDD Bilet Arama Botu · Otomatik takip ve bildirim platformu</p>
         <p>
-          <a href="/static/pages/iletisim.html">İletişim</a> ·
-          <a href="/static/pages/gizlilik.html">Gizlilik</a> ·
-          <a href="/static/pages/kullanim-kosullari.html">Kullanım Koşulları</a>
+          <a href="{{ url_for('main.legal_page', slug='iletisim') }}">İletişim</a> ·
+          <a href="{{ url_for('main.legal_page', slug='gizlilik') }}">Gizlilik</a> ·
+          <a href="{{ url_for('main.legal_page', slug='kullanim-kosullari') }}">Kullanım Koşulları</a>
         </p>
       </div>
     </footer>
@@ -213,12 +257,28 @@
       </div>
     </section>
 
-    <datalist id="stations">
-      {% for station in stations %}
-      <option value="{{ station }}"></option>
-      {% endfor %}
-    </datalist>
+    <section id="captcha-modal" class="modal is-hidden" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Güvenlik Doğrulaması Gerekli</h3>
+          <button type="button" class="modal-close" data-close-captcha>&times;</button>
+        </div>
+        <p class="modal-text">
+          TCDD bazen arama öncesinde Cloudflare güvenlik doğrulaması gösteriyor.
+          Açılan Edge penceresinde <strong>“Gerçek kişi olduğunuzu doğrulayın”</strong>
+          kutusunu işaretleyin.
+        </p>
+        <p class="modal-text">
+          Doğrulama tamamlanınca kontrol otomatik olarak devam eder. Herhangi bir
+          captcha çözme işlemi otomatik yapılmaz; bu adımı kullanıcı tamamlamalıdır.
+        </p>
+        <div class="actions">
+          <button type="button" class="primary" data-close-captcha>Anladım, Edge penceresine geçiyorum</button>
+        </div>
+      </div>
+    </section>
 
+    <script id="station-data" type="application/json">{{ stations | tojson }}</script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
   </html>

@@ -24,6 +24,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from . import error_codes as ErrCodes
+from .captcha import captcha_present
 from .driver_setting import resolve_logs_dir
 
 MAX_TREN_SAYISI = 22
@@ -106,6 +107,10 @@ class Control:
         stable_hits = 0
 
         while monotonic() < deadline:
+            if captcha_present(self.driver):
+                self.logger.warning("Bekleme sirasinda CAPTCHA algilandi.")
+                return ErrCodes.CAPTCHA_HATASI
+
             rows = self._available_train_rows()
             if rows:
                 if rows == last_rows:
@@ -158,6 +163,10 @@ class Control:
     def sayfa_kontrol(self):
         """Sayfada yer var mÄ± yok mu kontrol eder."""
         try:
+            if captcha_present(self.driver):
+                self.logger.warning("Guvenlik dogrulamasi (CAPTCHA) algilandi.")
+                return ErrCodes.CAPTCHA_HATASI
+
             WebDriverWait(self.driver, 8).until(
                 EC.visibility_of_element_located(
                     (By.XPATH, '//*[@id="seferListScroll"]')

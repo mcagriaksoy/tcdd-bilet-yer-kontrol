@@ -3,9 +3,6 @@ const stopButton = document.getElementById("stop-button");
 const telegramEnabled = document.getElementById("telegram-enabled");
 const telegramFields = document.getElementById("telegram-fields");
 const telegramBadge = document.getElementById("telegram-badge");
-const notificationState = document.getElementById("notification-state");
-const runStatus = document.getElementById("run-status");
-const runMeta = document.getElementById("run-meta");
 const attemptCount = document.getElementById("attempt-count");
 const startedAt = document.getElementById("started-at");
 const finishedAt = document.getElementById("finished-at");
@@ -20,12 +17,14 @@ const webNotificationStatus = document.getElementById("web-notification-status")
 const howItWorksTrigger = document.getElementById("how-it-works-trigger");
 const howItWorksModal = document.getElementById("how-it-works-modal");
 const ticketFoundModal = document.getElementById("ticket-found-modal");
+const captchaModal = document.getElementById("captcha-modal");
 const soundEnabled = document.getElementById("sound-enabled");
 const delaySlider = document.getElementById("delay-slider");
 const delayInput = document.getElementById("delay-input");
 
 let lastLogId = 0;
 let previouslyFound = false;
+let captchaDismissed = false;
 let swRegistration = null;
 let audioContextRef = null;
 let audioUnlocked = false;
@@ -41,6 +40,163 @@ function setTextIfPresent(element, value) {
   }
 }
 
+let stationList = [];
+const stationDataElement = document.getElementById("station-data");
+if (stationDataElement) {
+  try {
+    stationList = JSON.parse(stationDataElement.textContent || "[]");
+  } catch (_error) {
+    stationList = [];
+  }
+}
+
+function normalizeStation(value) {
+  return (value || "")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ş/g, "s")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/â/g, "a")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function setupStationPicker(picker) {
+  const input = picker.querySelector("input");
+  const list = picker.querySelector(".station-options");
+  if (!input || !list) {
+    return;
+  }
+
+  let visibleStations = [];
+  let activeIndex = -1;
+
+  function updateActiveOption() {
+    const options = list.querySelectorAll(".station-option");
+    options.forEach((option, index) => {
+      const isActive = index === activeIndex;
+      option.classList.toggle("is-active", isActive);
+      option.setAttribute("aria-selected", String(isActive));
+      if (isActive) {
+        option.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
+  function chooseStation(index) {
+    const station = visibleStations[index];
+    if (!station) {
+      return;
+    }
+    input.value = station;
+    input.dataset.selected = station;
+    closeList();
+    input.focus();
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function renderList() {
+    list.replaceChildren();
+    if (!visibleStations.length) {
+      const empty = document.createElement("div");
+      empty.className = "station-empty";
+      empty.textContent = "Eşleşen istasyon bulunamadı";
+      list.appendChild(empty);
+      return;
+    }
+
+    visibleStations.forEach((station, index) => {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "station-option";
+      option.setAttribute("role", "option");
+      option.textContent = station;
+      option.addEventListener("mousedown", (event) => event.preventDefault());
+      option.addEventListener("click", () => chooseStation(index));
+      option.addEventListener("mouseenter", () => {
+        activeIndex = index;
+        updateActiveOption();
+      });
+      list.appendChild(option);
+    });
+  }
+
+  function openList(filterText = "") {
+    const query = normalizeStation((filterText || "").trim());
+    visibleStations = query
+      ? stationList.filter((station) => normalizeStation(station).includes(query))
+      : stationList.slice();
+
+    renderList();
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+
+    const selected = visibleStations.indexOf(input.dataset.selected || input.value);
+    activeIndex = selected >= 0 ? selected : visibleStations.length ? 0 : -1;
+    updateActiveOption();
+  }
+
+  function closeList() {
+    list.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    activeIndex = -1;
+  }
+
+  input.addEventListener("focus", () => openList(""));
+  input.addEventListener("click", () => {
+    if (list.hidden) {
+      openList("");
+    }
+  });
+  input.addEventListener("input", () => {
+    input.dataset.selected = "";
+    openList(input.value);
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (list.hidden) {
+        openList(input.value);
+        return;
+      }
+      activeIndex = Math.min(visibleStations.length - 1, activeIndex + 1);
+      updateActiveOption();
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (list.hidden) {
+        openList(input.value);
+        return;
+      }
+      activeIndex = Math.max(0, activeIndex - 1);
+      updateActiveOption();
+      return;
+    }
+    if (event.key === "Enter" && !list.hidden) {
+      event.preventDefault();
+      chooseStation(activeIndex);
+      return;
+    }
+    if (event.key === "Escape") {
+      closeList();
+      return;
+    }
+    if (event.key === "Tab") {
+      closeList();
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!picker.contains(event.target)) {
+      closeList();
+    }
+  });
+}
+
 function updateNotificationIndicator() {
   const totalOptions = 3;
   const activeOptions = [
@@ -54,40 +210,109 @@ function updateNotificationIndicator() {
   if (activeOptions === 0) {
     telegramBadge.textContent = "Kapali";
     telegramBadge.classList.add("state-off");
-    setTextIfPresent(notificationState, "Kapali");
     return;
   }
 
   if (activeOptions === totalOptions) {
     telegramBadge.textContent = "Acık";
     telegramBadge.classList.add("state-on");
-    setTextIfPresent(notificationState, "Acık");
     return;
   }
 
   telegramBadge.textContent = "Kısmen Acık";
   telegramBadge.classList.add("state-partial");
-  setTextIfPresent(notificationState, "Kısmen Acık");
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatDateDigits(digits) {
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+  let formatted = day;
+  if (month) {
+    formatted += `/${month}`;
+  }
+  if (year) {
+    formatted += `/${year}`;
+  }
+  return formatted;
+}
+
+function formatTimeDigits(digits) {
+  const hour = digits.slice(0, 2);
+  const minute = digits.slice(2, 4);
+  return minute ? `${hour}:${minute}` : hour;
+}
+
+function parseDateTr(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((value || "").trim());
+  if (!match) {
+    return null;
+  }
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+  parsed.setHours(0, 0, 0, 0);
+  return parsed;
+}
+
+function isValidTimeValue(value) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test((value || "").trim());
+}
+
+function normalizeTimeInput(input) {
+  const digits = input.value.replace(/\D/g, "");
+  let hour;
+  let minute;
+
+  if (digits.length === 3) {
+    hour = digits.slice(0, 1);
+    minute = digits.slice(1, 3);
+  } else {
+    hour = digits.slice(0, 2);
+    minute = digits.slice(2, 4);
+  }
+
+  if (hour && minute) {
+    input.value = `${pad2(Number(hour))}:${pad2(Number(minute))}`;
+  }
 }
 
 function setTodayDefaults() {
   const dateField = form.elements.tarih;
   const timeField = form.elements.saat;
   const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
 
-  const todayIso = `${yyyy}-${mm}-${dd}`;
-  dateField.min = todayIso;
-  if (!dateField.value) {
-    dateField.value = todayIso;
-  }
-  if (!timeField.value) {
-    timeField.value = `${hh}:${min}`;
-  }
+  dateField.value = `${pad2(now.getDate())}/${pad2(now.getMonth() + 1)}/${now.getFullYear()}`;
+  timeField.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+}
+
+function attachDateTimeMasks() {
+  const dateField = form.elements.tarih;
+  const timeField = form.elements.saat;
+
+  dateField.addEventListener("input", () => {
+    const digits = dateField.value.replace(/\D/g, "").slice(0, 8);
+    dateField.value = formatDateDigits(digits);
+  });
+
+  timeField.addEventListener("input", () => {
+    const digits = timeField.value.replace(/\D/g, "").slice(0, 4);
+    timeField.value = formatTimeDigits(digits);
+  });
+
+  timeField.addEventListener("blur", () => normalizeTimeInput(timeField));
 }
 
 function updateTelegramState() {
@@ -165,6 +390,20 @@ function closeModal(modalElement) {
   }
   modalElement.classList.add("is-hidden");
   modalElement.setAttribute("aria-hidden", "true");
+}
+
+function syncCaptchaModal(data) {
+  if (!captchaModal) {
+    return;
+  }
+  if (data.captcha) {
+    if (!captchaDismissed) {
+      openModal(captchaModal);
+    }
+    return;
+  }
+  captchaDismissed = false;
+  closeModal(captchaModal);
 }
 
 function applyStatusTone(data) {
@@ -314,15 +553,6 @@ async function refreshStatus() {
   const response = await fetch("/api/status");
   const data = await response.json();
 
-  setTextIfPresent(runStatus, data.status || "Hazir");
-  setTextIfPresent(
-    runMeta,
-    data.running
-      ? "Selenium taramasi arka planda aktif olarak calisiyor."
-      : data.found
-        ? "Uygun koltuk bulundu, arama sonucu hazir."
-        : "Su anda aktif bir tarama yok."
-  );
   runningLoader.classList.toggle("is-hidden", !data.running);
 
   setTextIfPresent(attemptCount, String(data.attempt ?? 0));
@@ -330,6 +560,7 @@ async function refreshStatus() {
   finishedAt.textContent = data.finished_at || "-";
   statusEcho.textContent = data.status || "Beklemede";
   applyStatusTone(data);
+  syncCaptchaModal(data);
 
   if (data.found && !previouslyFound) {
     openModal(ticketFoundModal);
@@ -357,10 +588,10 @@ async function refreshLogs() {
 
 function formToPayload() {
   return {
-    nereden: form.elements.nereden.value,
-    nereye: form.elements.nereye.value,
-    tarih: form.elements.tarih.value,
-    saat: form.elements.saat.value,
+    nereden: form.elements.nereden.value.trim(),
+    nereye: form.elements.nereye.value.trim(),
+    tarih: form.elements.tarih.value.trim(),
+    saat: form.elements.saat.value.trim(),
     delay_time: Number(delayInput.value || 1),
     allow_economy: form.elements.allow_economy.checked,
     allow_business: form.elements.allow_business.checked,
@@ -372,12 +603,35 @@ function formToPayload() {
 
 async function startJob(event) {
   event.preventDefault();
-  const dateField = form.elements.tarih;
-  const todayIso = new Date().toISOString().slice(0, 10);
-  if (dateField.value && dateField.value < todayIso) {
-    alert("Bugünden daha eski bir tarih seçilemez.");
+
+  const selectedDate = parseDateTr(form.elements.tarih.value);
+  if (!selectedDate) {
+    alert("Tarihi GG/AA/YYYY formatında girin. Örnek: 01/11/2026");
+    form.elements.tarih.focus();
     return;
   }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selectedDate < today) {
+    alert("Bugünden daha eski bir tarih seçilemez.");
+    form.elements.tarih.focus();
+    return;
+  }
+
+  if (!isValidTimeValue(form.elements.saat.value)) {
+    alert("Saati 24 saat formatında SS:DD olarak girin. Örnek: 14:30");
+    form.elements.saat.focus();
+    return;
+  }
+
+  const nereden = form.elements.nereden.value.trim();
+  const nereye = form.elements.nereye.value.trim();
+  if (!stationList.includes(nereden) || !stationList.includes(nereye)) {
+    alert("Lütfen kalkış ve varış istasyonlarını listeden seçin.");
+    return;
+  }
+
   const response = await fetch("/api/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -389,7 +643,6 @@ async function startJob(event) {
     alert(data.error || "Arama baslatilirken bir hata olustu.");
     return;
   }
-
   previouslyFound = false;
   await refreshStatus();
 }
@@ -400,6 +653,8 @@ async function stopJob() {
 }
 
 setTodayDefaults();
+attachDateTimeMasks();
+document.querySelectorAll("[data-station-picker]").forEach(setupStationPicker);
 updateTelegramState();
 updateWebNotificationState();
 syncDelayControls(false);
@@ -440,16 +695,30 @@ document.querySelectorAll("[data-close-modal]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-close-captcha]").forEach((button) => {
+  button.addEventListener("click", () => {
+    captchaDismissed = true;
+    closeModal(captchaModal);
+  });
+});
+
 document.addEventListener("click", (event) => {
   if (event.target.classList.contains("modal")) {
+    if (event.target === captchaModal) {
+      captchaDismissed = true;
+    }
     closeModal(event.target);
   }
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (captchaModal && !captchaModal.classList.contains("is-hidden")) {
+      captchaDismissed = true;
+    }
     closeModal(howItWorksModal);
     closeModal(ticketFoundModal);
+    closeModal(captchaModal);
   }
 });
 

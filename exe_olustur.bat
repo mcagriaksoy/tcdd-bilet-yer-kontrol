@@ -1,16 +1,16 @@
 @echo off
 setlocal EnableExtensions
 
-REM Build Start UI launcher as a standalone EXE with all packages/data.
+REM Build the single-file web UI executable with all packages and data.
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 set "ENTRY=%ROOT%\start_ui.py"
-set "APP_NAME=start_ui"
+set "APP_NAME=tcdd-bilet-botu"
 set "DIST_DIR=%ROOT%\dist"
 set "BUILD_DIR=%ROOT%\build"
 set "SPEC_FILE=%ROOT%\%APP_NAME%.spec"
-set "VERSION_FILE=%ROOT%\desktop_app\version.txt"
+set "VERSION_FILE=%ROOT%\version.txt"
 
 echo [1/4] Proje dizini: %ROOT%
 
@@ -34,8 +34,8 @@ if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%"
 if exist "%SPEC_FILE%" del /q "%SPEC_FILE%"
 
 if exist "%DIST_DIR%" (
-    echo HATA: dist klasoru silinemedi. start_ui.exe calisiyor olabilir.
-    echo Lutfen calisan start_ui.exe surecini kapatip tekrar deneyin.
+    echo HATA: dist klasoru silinemedi. Uygulama calisiyor olabilir.
+    echo Lutfen calisan tcdd-bilet-botu.exe surecini kapatip tekrar deneyin.
     pause
     exit /b 1
 )
@@ -51,16 +51,15 @@ pyinstaller --noconfirm --clean --windowed --onefile ^
     --icon "%ROOT%\icon.ico" ^
     --version-file "%VERSION_FILE%" ^
     --collect-all webapp ^
-    --collect-all desktop_app ^
     --collect-all backend ^
+    --collect-all webview ^
     --collect-submodules selenium ^
     --collect-submodules webdriver_manager ^
-    --hidden-import tkinter ^
-    --hidden-import tkcalendar ^
+    --hidden-import webview.platforms.edgechromium ^
+    --hidden-import webview.platforms.winforms ^
+    --hidden-import clr ^
     --add-data "%ROOT%\webapp\templates;webapp\templates" ^
     --add-data "%ROOT%\webapp\static;webapp\static" ^
-    --add-data "%ROOT%\desktop_app\icon.ico;desktop_app" ^
-    --add-data "%ROOT%\desktop_app\default-green.png;desktop_app" ^
     --add-data "%ROOT%\icon.ico;." ^
     "%ENTRY%"
 
@@ -74,8 +73,8 @@ echo [4/4] Runtime dosyalari kopyalaniyor...
 if exist "%ROOT%\msedgedriver.exe" (
     copy /Y "%ROOT%\msedgedriver.exe" "%DIST_DIR%\msedgedriver.exe" >nul
 )
-if exist "%ROOT%\desktop_app\version.txt" (
-    copy /Y "%ROOT%\desktop_app\version.txt" "%DIST_DIR%\version.txt" >nul
+if exist "%ROOT%\version.txt" (
+    copy /Y "%ROOT%\version.txt" "%DIST_DIR%\version.txt" >nul
 )
 
 echo.

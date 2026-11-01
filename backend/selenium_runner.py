@@ -9,10 +9,17 @@ from time import sleep
 
 from selenium.common.exceptions import InvalidSessionIdException, NoSuchWindowException, TimeoutException
 
+from .captcha import captcha_present, wait_for_captcha
 from .control import Control
 from .driver_get import DriverGet
 from .driver_setting import DriverSetting, cleanup_webdriver_runtime
-from .error_codes import BASARILI, GUZERGAH_HATASI, SAAT_HATASI, TEKRAR_DENE
+from .error_codes import (
+    BASARILI,
+    CAPTCHA_HATASI,
+    GUZERGAH_HATASI,
+    SAAT_HATASI,
+    TEKRAR_DENE,
+)
 from .route import Rota
 from .stations import STATIONS
 from .telegram_msg import TelegramMsg
@@ -103,6 +110,27 @@ def validate_payload(payload):
     }
 
 
+def _notify_captcha(payload, log):
+    if not payload.get("telegram_msg"):
+        return
+    try:
+        sent = TelegramMsg().send_telegram_message(
+            payload["bot_token"],
+            payload["chat_id"],
+            message=(
+                "TCDD guvenlik dogrulamasi (CAPTCHA) bekliyor. "
+                "Lutfen acilan tarayici penceresinde dogrulamayi tamamlayin."
+            ),
+        )
+        log(
+            "Telegram guvenlik dogrulamasi bildirimi gonderildi."
+            if sent
+            else "Telegram guvenlik dogrulamasi bildirimi gonderilemedi."
+        )
+    except Exception as exc:
+        logger.warning("Telegram guvenlik dogrulamasi bildirimi hatasi: %s", exc)
+
+
 def run_check_loop(payload, stop_event, log, update):
     payload = validate_payload(payload)
     logger = _build_logger()
@@ -136,6 +164,11 @@ def run_check_loop(payload, stop_event, log, update):
             if stop_event.is_set():
                 return None
 
+            if captcha_present(driver):
+                _notify_captcha(payload, log)
+                if not wait_for_captcha(driver, stop_event, log, update):
+                    continue
+
             log("Rota bilgileri giriliyor...")
             route_ok = Rota(
                 driver,
@@ -143,6 +176,20 @@ def run_check_loop(payload, stop_event, log, update):
                 payload["nereye"],
                 payload["tarih"],
             ).dataInput()
+
+            if captcha_present(driver):
+                _notify_captcha(payload, log)
+                if not wait_for_captcha(driver, stop_event, log, update):
+                    continue
+                if route_ok == -1:
+                    log("Rota bilgileri guvenlik dogrulamasi sonrasi tekrar giriliyor.")
+                    route_ok = Rota(
+                        driver,
+                        payload["nereden"],
+                        payload["nereye"],
+                        payload["tarih"],
+                    ).dataInput()
+
             if route_ok == -1:
                 log("Rota bilgileri girilemedi.")
                 return GUZERGAH_HATASI
@@ -156,6 +203,20 @@ def run_check_loop(payload, stop_event, log, update):
                 logger=logger,
                 stop_event=stop_event,
             ).sayfa_kontrol()
+
+            if result == CAPTCHA_HATASI:
+                _notify_captcha(payload, log)
+                if not wait_for_captcha(driver, stop_event, log, update):
+                    continue
+                log("Guvenlik dogrulamasi tamamlandi, koltuk kontrolu tekrarlaniyor.")
+                result = Control(
+                    driver,
+                    payload["saat"],
+                    allow_economy=payload["allow_economy"],
+                    allow_business=payload["allow_business"],
+                    logger=logger,
+                    stop_event=stop_event,
+                ).sayfa_kontrol()
 
             if result == BASARILI:
                 log("Uygun bilet bulundu.")
@@ -180,6 +241,9 @@ def run_check_loop(payload, stop_event, log, update):
                     "Lutfen saat bilgisini kontrol edip tekrar deneyin."
                 )
                 return result
+            if result == CAPTCHA_HATASI:
+                log("Guvenlik dogrulamasi devam ediyor; yeni deneme yapilacak.")
+                continue
 
             if result == TEKRAR_DENE:
                 log(f"{payload['delay_time']} dakika sonra tekrar denenecek.")

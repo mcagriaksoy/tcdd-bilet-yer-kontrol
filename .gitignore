@@ -13,12 +13,11 @@ build/
 dist/
 *.egg-info/
 
-# Desktop build output
-desktop_app/build/
-desktop_app/dist/
+# PyInstaller
 *.spec
 
 # Runtime logs and temp
+logs/
 *.log
 
 # Local binaries/drivers

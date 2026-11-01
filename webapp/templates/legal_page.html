@@ -32,6 +32,26 @@
           <li>{{ item }}</li>
           {% endfor %}
         </ul>
+
+        {% if contact_form %}
+        <form class="contact-form" action="https://formspree.io/f/xvganlll" method="POST">
+          <label class="field">
+            <span>Ad Soyad</span>
+            <input type="text" name="name" required>
+          </label>
+          <label class="field">
+            <span>E-posta</span>
+            <input type="email" name="email" required>
+          </label>
+          <label class="field">
+            <span>Mesaj</span>
+            <textarea name="message" rows="6" required></textarea>
+          </label>
+          <input type="hidden" name="_subject" value="TCDD Bilet Arama Botu İletişim Mesajı">
+          <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
+          <button class="primary contact-submit" type="submit">Mesaj Gönder</button>
+        </form>
+        {% endif %}
       </section>
     </main>
 

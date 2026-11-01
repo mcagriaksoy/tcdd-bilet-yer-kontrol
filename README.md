@@ -19,6 +19,12 @@
 > - Yeni bir özellik talep etmek veya bir sorun bildirmek isterseniz lütfen
 >   [issue açın](https://github.com/mcagriaksoy/tcdd-bilet-yer-kontrol/issues).
 
+![TCDD eBilet "Alarm Oluştur" ekranı](img/tcdd-alarm-olustur.png)
+
+*TCDD eBilet'in yerleşik "Alarm Oluştur" ekranı: boş yer oluştuğunda e-posta ile
+bildirim gönderiyor. Bu özellik, projenin sunduğu takip işlevini doğrudan
+karşıladığı için proje artık ağırlıklı olarak eğitim amacıyla sürdürülmektedir.*
+
 Bu proje TCDD eBilet tarafinda secilen rota/saat icin bos koltuk durumunu periyodik olarak kontrol eder. Bu uygulama, yolcuların bilet bilgilerini hızlı ve kolay bir şekilde aramalarina ve doğrulamalarına olanak tanır.
 
 ## Mimari

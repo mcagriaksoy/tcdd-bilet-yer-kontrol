@@ -2,5 +2,6 @@ include README.md
 include LICENSE
 include icon.ico
 include version.txt
+recursive-include img *.png *.jpg
 recursive-include webapp/templates *.html
 recursive-include webapp/static *
